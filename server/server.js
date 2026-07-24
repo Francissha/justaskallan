@@ -11,7 +11,7 @@ dotenv.config();
 
 const app = express();
 
-// Database
+// Connect Database
 connectDB();
 
 // Middleware
@@ -24,16 +24,16 @@ const allowedOrigins = [
   "https://justaskallanke.vercel.app",
   "https://justaskallan.vercel.app",
   process.env.FRONTEND_URL,
-];
+].filter(Boolean);
 
 app.use(
   cors({
-    origin(origin, callback) {
+    origin: (origin, callback) => {
       if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("CORS Error"));
+        return callback(null, true);
       }
+
+      return callback(new Error("Not allowed by CORS"));
     },
     credentials: true,
   })
@@ -41,7 +41,10 @@ app.use(
 
 // Routes
 app.get("/", (req, res) => {
-  res.send("JustAskAllan API Running 🚀");
+  res.json({
+    success: true,
+    message: "JustAskAllan API Running 🚀",
+  });
 });
 
 app.get("/api", (req, res) => {
@@ -56,26 +59,27 @@ app.use("/api/blog", blogRouter);
 app.use("/api/comment", commentRouter);
 
 // 404
-app.use("*", (req, res) => {
+app.use((req, res) => {
   res.status(404).json({
     success: false,
     message: "Route not found",
   });
 });
 
-// Error
+// Error Handler
 app.use((err, req, res, next) => {
   console.error(err);
 
-  res.status(500).json({
+  res.status(err.status || 500).json({
     success: false,
-    message: err.message,
+    message: err.message || "Internal Server Error",
   });
 });
 
-// Server
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
+
+export default app;
