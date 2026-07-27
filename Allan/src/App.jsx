@@ -10,6 +10,7 @@ import EditBlog from './pages/admin/EditBlog'
 import ListBlog from './pages/admin/ListBlog'
 import Comments from './pages/admin/Comments'
 import Login from './components/admin/Login'
+import About from "./pages/About";
 import { useAppContext } from './context/AppContext'
 import Contribute from './pages/Contribute'
 
@@ -30,6 +31,7 @@ const App = () => {
           <Route path="edit-blog/:id" element={<EditBlog />} />
           <Route path="list-blog" element={<ListBlog />} />
           <Route path="comments" element={<Comments />} />
+          <Route path="/about" element={<About />} />
         </Route>
       </Routes>
     </div>
