@@ -24,6 +24,7 @@ const App = () => {
         <Route path="/" element={<Home />} />
         <Route path="/blog/:id" element={<Blog />} />
         <Route path="/contribute" element={<Contribute />} />
+        <Route path="/about" element={<About />} />
 
         <Route path="/admin" element={token ? <Layout /> : <Login />}>
           <Route index element={<Dashboard />} />
@@ -31,7 +32,6 @@ const App = () => {
           <Route path="edit-blog/:id" element={<EditBlog />} />
           <Route path="list-blog" element={<ListBlog />} />
           <Route path="comments" element={<Comments />} />
-          <Route path="/about" element={<About />} />
         </Route>
       </Routes>
     </div>
