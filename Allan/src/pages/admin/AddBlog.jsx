@@ -7,7 +7,7 @@ import { useAppContext } from "../../context/AppContext";
 const AddBlog = () => {
   const navigate = useNavigate();
 
-  const { axios, backendUrl, token, fetchAllBlogs } = useAppContext();
+  const { axios, token, fetchAllBlogs } = useAppContext();
 
   const [thumbnail, setThumbnail] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -37,8 +37,7 @@ const AddBlog = () => {
     e.preventDefault();
 
     if (!thumbnail) {
-      toast.error("Please upload a thumbnail");
-      return;
+      return toast.error("Please upload a thumbnail.");
     }
 
     try {
@@ -59,27 +58,30 @@ const AddBlog = () => {
       formData.append("thumbnail", thumbnail);
 
       const { data } = await axios.post(
-        `${backendUrl}/api/blog`,
+        "/api/blog/add",
         formData,
         {
           headers: {
             Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
           },
         }
       );
 
       if (data.success) {
-        toast.success("Blog added successfully");
+        toast.success("Blog published successfully!");
 
-        fetchAllBlogs();
+        await fetchAllBlogs();
 
         navigate("/admin/list-blog");
       } else {
         toast.error(data.message);
       }
     } catch (error) {
+      console.log(error);
+
       toast.error(
-        error.response?.data?.message || "Failed to add blog"
+        error.response?.data?.message || "Failed to publish blog."
       );
     } finally {
       setLoading(false);
@@ -107,15 +109,15 @@ const AddBlog = () => {
             Thumbnail
           </label>
 
-          <label className="border-2 border-dashed rounded-xl h-56 flex flex-col items-center justify-center cursor-pointer">
+          <label className="border-2 border-dashed rounded-xl h-56 flex items-center justify-center cursor-pointer overflow-hidden">
             {thumbnail ? (
               <img
                 src={URL.createObjectURL(thumbnail)}
-                className="w-full h-full object-cover rounded-xl"
                 alt=""
+                className="w-full h-full object-cover"
               />
             ) : (
-              <>
+              <div className="flex flex-col items-center">
                 <ImagePlus
                   size={45}
                   className="text-gray-400"
@@ -123,13 +125,13 @@ const AddBlog = () => {
                 <p className="mt-3 text-gray-500">
                   Upload Thumbnail
                 </p>
-              </>
+              </div>
             )}
 
             <input
               type="file"
-              hidden
               accept="image/*"
+              hidden
               onChange={handleImage}
             />
           </label>
@@ -161,6 +163,7 @@ const AddBlog = () => {
             value={blogData.subtitle}
             onChange={handleChange}
             className="w-full border rounded-lg p-3"
+            required
           />
         </div>
 
@@ -190,9 +193,9 @@ const AddBlog = () => {
             onChange={handleChange}
             className="w-full border rounded-lg p-3"
           >
-            <option>Article</option>
-            <option>Guide</option>
-            <option>Video</option>
+            <option value="Article">Article</option>
+            <option value="Guide">Guide</option>
+            <option value="Video">Video</option>
           </select>
         </div>
 
@@ -223,14 +226,14 @@ const AddBlog = () => {
             onChange={handleChange}
             className="w-full border rounded-lg p-3"
           >
-            <option>Draft</option>
-            <option>Published</option>
+            <option value="Draft">Draft</option>
+            <option value="Published">Published</option>
           </select>
         </div>
 
         <div>
           <label className="block mb-2 font-semibold">
-            Content
+            Blog Content
           </label>
 
           <textarea
@@ -246,7 +249,7 @@ const AddBlog = () => {
         <button
           type="submit"
           disabled={loading}
-          className="bg-[#1B4D3E] text-white px-8 py-3 rounded-lg"
+          className="bg-[#1B4D3E] text-white px-8 py-3 rounded-lg hover:bg-[#16382e]"
         >
           {loading ? "Publishing..." : "Publish Blog"}
         </button>
