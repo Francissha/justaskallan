@@ -26,13 +26,27 @@ export const addBlog = async (req, res) => {
     let image = "";
 
     if (req.file) {
-      const uploadedImage = await imagekit.upload({
-        file: req.file.buffer.toString("base64"),
-        fileName: `${Date.now()}-${req.file.originalname}`,
-        folder: "/blogs",
-      });
+      try {
+        console.log("Uploading image to ImageKit...");
 
-      image = uploadedImage.url;
+        const uploadedImage = await imagekit.upload({
+          file: req.file.buffer.toString("base64"),
+          fileName: `${Date.now()}-${req.file.originalname}`,
+          folder: "/blogs",
+        });
+
+        console.log("Image uploaded successfully.");
+        image = uploadedImage.url;
+      } catch (err) {
+        console.error("========== IMAGEKIT ERROR ==========");
+        console.error(err);
+
+        return res.status(500).json({
+          success: false,
+          message: err.message,
+          error: err,
+        });
+      }
     }
 
     const blog = await Blog.create({
@@ -53,7 +67,8 @@ export const addBlog = async (req, res) => {
       blog,
     });
   } catch (error) {
-    console.log(error);
+    console.error("ADD BLOG ERROR");
+    console.error(error);
 
     res.status(500).json({
       success: false,
@@ -76,6 +91,8 @@ export const getBlogs = async (req, res) => {
       blogs,
     });
   } catch (error) {
+    console.error(error);
+
     res.status(500).json({
       success: false,
       message: error.message,
@@ -102,6 +119,8 @@ export const getBlog = async (req, res) => {
       blog,
     });
   } catch (error) {
+    console.error(error);
+
     res.status(500).json({
       success: false,
       message: error.message,
@@ -134,23 +153,34 @@ export const updateBlog = async (req, res) => {
     }
 
     if (req.file) {
-      const uploadedImage = await imagekit.upload({
-        file: req.file.buffer.toString("base64"),
-        fileName: `${Date.now()}-${req.file.originalname}`,
-        folder: "/blogs",
-      });
+      try {
+        console.log("Uploading new image to ImageKit...");
 
-      blog.image = uploadedImage.url;
+        const uploadedImage = await imagekit.upload({
+          file: req.file.buffer.toString("base64"),
+          fileName: `${Date.now()}-${req.file.originalname}`,
+          folder: "/blogs",
+        });
+
+        blog.image = uploadedImage.url;
+      } catch (err) {
+        console.error("========== IMAGEKIT ERROR ==========");
+        console.error(err);
+
+        return res.status(500).json({
+          success: false,
+          message: err.message,
+          error: err,
+        });
+      }
     }
 
     blog.title = title || blog.title;
     blog.subtitle = subtitle || blog.subtitle;
-    blog.description =
-      description || blog.description;
+    blog.description = description || blog.description;
     blog.category = category || blog.category;
     blog.type = type || blog.type;
-    blog.youtubeLink =
-      youtubeLink || blog.youtubeLink;
+    blog.youtubeLink = youtubeLink || blog.youtubeLink;
 
     if (typeof isPublished !== "undefined") {
       blog.isPublished =
@@ -165,7 +195,8 @@ export const updateBlog = async (req, res) => {
       blog,
     });
   } catch (error) {
-    console.log(error);
+    console.error("UPDATE BLOG ERROR");
+    console.error(error);
 
     res.status(500).json({
       success: false,
@@ -195,6 +226,8 @@ export const deleteBlog = async (req, res) => {
       message: "Blog deleted successfully.",
     });
   } catch (error) {
+    console.error(error);
+
     res.status(500).json({
       success: false,
       message: error.message,
