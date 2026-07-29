@@ -1,259 +1,430 @@
-"use client";
+import React, { useEffect, useState } from "react";
+import {
+  useParams,
+  useNavigate,
+} from "react-router-dom";
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
-import { Highlighter, Clock, Calendar } from "lucide-react";
+import {
+  ArrowLeft,
+  Share2,
+  Calendar,
+  Folder,
+  MessageSquare,
+  Plus,
+  Minus,
+  Highlighter,
+} from "lucide-react";
 
-const SECTION_META = {
-  introduction: { label: "Section One", title: "Introduction", accent: "#239962" },
-  body: { label: "Section Two", title: "Body", accent: "#3B82F6" },
-  conclusion: { label: "Final Section", title: "Conclusion", accent: "#F97316" },
-};
-const useInView = (options = {}) => {
-  const ref = useRef(null);
-  const [isInView, setIsInView] = useState(false);
+import BlogCard from "../components/BlogCard";
+import { useAppContext } from "../context/AppContext";
 
-  useEffect(() => {
-    const node = ref.current;
-    if (!node) return;
+const getYoutubeEmbedUrl = (url) => {
+  if (!url) return null;
 
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsInView(true);
-          observer.disconnect(); // once: true behavior
-        }
-      },
-      { threshold: 0.1, rootMargin: "-60px", ...options }
-    );
-
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, []);
-
-  return [ref, isInView];
-};
-
-// Fade/slide-up wrapper, drop-in replacement for <motion.div initial/whileInView>
-const Reveal = ({ as: Tag = "div", delay = 0, y = 20, className = "", style = {}, children, ...rest }) => {
-  const [ref, isInView] = useInView();
-  return (
-    <Tag
-      ref={ref}
-      className={className}
-      style={{
-        opacity: isInView ? 1 : 0,
-        transform: isInView ? "translateY(0)" : `translateY(${y}px)`,
-        transition: `opacity 0.5s ease ${delay}s, transform 0.5s ease ${delay}s`,
-        ...style,
-      }}
-      {...rest}
-    >
-      {children}
-    </Tag>
+  const match = url.match(
+    /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
   );
+
+  return match
+    ? `https://www.youtube.com/embed/${match[1]}`
+    : null;
 };
 
-const Blog = ({ blog }) => {
-  const [fontSize, setFontSize] = useState(18);
-  const [highlightMode, setHighlightMode] = useState(false);
+const sectionIcons = ["📖", "🧠", "📚", "🏁"];
+
+const Blog = () => {
+  const { id } = useParams();
+
+  const navigate = useNavigate();
+
+  const {
+    axios,
+    backendUrl,
+    blogs,
+    fetchAllBlogs,
+  } = useAppContext();
+
+  const [blog, setBlog] = useState(null);
+
+  const [loading, setLoading] = useState(true);
+
+  const [fontSize, setFontSize] = useState(19);
+
+  const [highlightMode, setHighlightMode] =
+    useState(false);
+
   const [highlights, setHighlights] = useState({});
+
   const [progress, setProgress] = useState(0);
 
-  const highlightsKey = `blog_highlights_${blog?.id ?? "draft"}`;
+  const fetchBlog = async () => {
+    try {
+      const { data } = await axios.get(
+        `${backendUrl}/api/blog/${id}`
+      );
 
-  useEffect(() => {
-    const stored = localStorage.getItem(highlightsKey);
-    if (stored) setHighlights(JSON.parse(stored));
-  }, [highlightsKey]);
-
-  useEffect(() => {
-    localStorage.setItem(highlightsKey, JSON.stringify(highlights));
-  }, [highlights, highlightsKey]);
-
-  const toggleHighlight = (sectionKey, paraIndex) => {
-    if (!highlightMode) return;
-    const key = `${sectionKey}-${paraIndex}`;
-    setHighlights((prev) => ({ ...prev, [key]: !prev[key] }));
+      if (data.success) {
+        setBlog(data.blog);
+      }
+    } catch (err) {
+      console.log(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Scroll-based reading progress, replacing framer's useScroll/useSpring
-  const handleScroll = useCallback(() => {
-    const doc = document.documentElement;
-    const scrollTop = window.scrollY || doc.scrollTop;
-    const maxScroll = doc.scrollHeight - doc.clientHeight;
-    setProgress(maxScroll > 0 ? Math.min(1, scrollTop / maxScroll) : 0);
+  useEffect(() => {
+    fetchBlog();
+
+    if (blogs.length === 0) {
+      fetchAllBlogs();
+    }
+  }, [id]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const total =
+        document.documentElement.scrollHeight -
+        document.documentElement.clientHeight;
+
+      const current =
+        document.documentElement.scrollTop;
+
+      setProgress((current / total) * 100);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+
+    return () =>
+      window.removeEventListener(
+        "scroll",
+        handleScroll
+      );
   }, []);
 
-  useEffect(() => {
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    handleScroll();
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [handleScroll]);
-
-  const sections = [
-    { key: "introduction", text: blog?.introduction, fallback: "No introduction available." },
-    { key: "body", text: blog?.body || blog?.description, fallback: "No body content available." },
-    { key: "conclusion", text: blog?.conclusion, fallback: "No conclusion available." },
-  ];
-
-  const renderParagraphs = (sectionKey, text) => {
-    const paragraphs = (text || "").split(/\n+/).filter((p) => p.trim() !== "");
-    if (paragraphs.length === 0) return null;
-
-    return paragraphs.map((paragraph, index) => {
-      const key = `${sectionKey}-${index}`;
-      const isHighlighted = highlights[key];
-
-      return (
-        <Reveal
-          as="p"
-          key={key}
-          delay={index * 0.05}
-          y={10}
-          onClick={() => toggleHighlight(sectionKey, index)}
-          className={`mb-5 rounded-lg px-3 py-1 transition-colors duration-300 leading-9 text-lg ${
-            highlightMode ? "cursor-pointer" : ""
-          } ${
-            isHighlighted ? "bg-yellow-500/30 text-white" : "text-gray-300 hover:bg-gray-800/30"
-          }`}
-          style={{ fontSize: `${fontSize}px` }}
-        >
-          {paragraph}
-        </Reveal>
-      );
-    });
-  };
-
-  return (
-    <div className="relative bg-gradient-to-br from-[#0a0a0a] via-[#0f0f0f] to-[#0a0a0a] min-h-screen text-white py-10 px-4 sm:px-6">
-      {/* Reading progress rail */}
-      <div className="fixed top-0 left-0 right-0 h-1 bg-gray-800 z-50">
-        <div
-          className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"
-          style={{
-            transform: `scaleX(${progress})`,
-            transformOrigin: "0% 50%",
-            transition: "transform 0.1s linear",
-          }}
-        />
+  if (loading)
+    return (
+      <div className="min-h-screen flex justify-center items-center text-2xl font-bold">
+        Loading...
       </div>
+    );
 
-      {/* Side Controls */}
-      <div className="hidden lg:flex flex-col items-center fixed left-6 top-1/3 bg-[#1a1a1a] p-4 rounded-2xl shadow-xl space-y-3 border border-gray-800 z-40">
+  if (!blog)
+    return (
+      <div className="min-h-screen flex justify-center items-center text-2xl font-bold">
+        Blog Not Found
+      </div>
+    );
+
+  const embedUrl =
+    blog.type === "Video"
+      ? getYoutubeEmbedUrl(blog.youtubeLink)
+      : null;
+
+  const relatedBlogs = blogs
+    .filter(
+      (item) =>
+        item._id !== blog._id &&
+        item.category === blog.category
+    )
+    .slice(0, 3);
+
+  const sections = blog.description
+    .split(/📖|🧠|📚|🏁/)
+    .filter(Boolean);
+
+  const toggleHighlight = (key) => {
+    if (!highlightMode) return;
+
+    setHighlights((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
+  };
+  return (
+  <div className="bg-[#080808] min-h-screen text-white">
+
+    {/* Reading Progress */}
+
+    <div className="fixed top-0 left-0 w-full h-1 bg-gray-800 z-50">
+      <div
+        className="h-full bg-[#239962] transition-all duration-150"
+        style={{ width: `${progress}%` }}
+      />
+    </div>
+
+    {/* Floating Reader Controls */}
+
+    <div className="hidden lg:flex fixed left-8 top-1/2 -translate-y-1/2 z-40 flex-col gap-4">
+
+      <button
+        onClick={() =>
+          setFontSize((prev) => prev + 2)
+        }
+        className="w-12 h-12 rounded-xl bg-[#1B1B1B] hover:bg-[#239962] flex items-center justify-center shadow-lg transition"
+      >
+        <Plus />
+      </button>
+
+      <button
+        onClick={() =>
+          setFontSize((prev) =>
+            Math.max(14, prev - 2)
+          )
+        }
+        className="w-12 h-12 rounded-xl bg-[#1B1B1B] hover:bg-[#239962] flex items-center justify-center shadow-lg transition"
+      >
+        <Minus />
+      </button>
+
+      <button
+        onClick={() =>
+          setHighlightMode(!highlightMode)
+        }
+        className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-lg transition ${
+          highlightMode
+            ? "bg-yellow-500 text-black"
+            : "bg-[#1B1B1B] hover:bg-[#239962]"
+        }`}
+      >
+        <Highlighter />
+      </button>
+
+    </div>
+
+    {/* Top Navigation */}
+
+    <div className="max-w-6xl mx-auto pt-8 px-6">
+
+      <div className="flex flex-wrap justify-between items-center gap-4 mb-8">
+
+        <div className="flex gap-4">
+
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-2 bg-[#181818] hover:bg-[#239962] px-5 py-3 rounded-xl transition"
+          >
+            <ArrowLeft size={18} />
+            Back
+          </button>
+
+          <button
+            className="flex items-center gap-2 bg-[#181818] hover:bg-[#239962] px-5 py-3 rounded-xl transition"
+          >
+            <MessageSquare size={18} />
+            Reviews
+          </button>
+
+        </div>
+
         <button
-          onClick={() => setFontSize((f) => Math.min(32, f + 2))}
-          className="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg text-sm font-semibold transition-all"
+          onClick={() => {
+            if (navigator.share) {
+              navigator.share({
+                title: blog.title,
+                url: window.location.href,
+              });
+            } else {
+              navigator.clipboard.writeText(
+                window.location.href
+              );
+            }
+          }}
+          className="flex items-center gap-2 bg-[#181818] hover:bg-[#239962] px-5 py-3 rounded-xl transition"
         >
-          A+
+          <Share2 size={18} />
+          Share
         </button>
-        <button
-          onClick={() => setFontSize((f) => Math.max(12, f - 2))}
-          className="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg text-sm font-semibold transition-all"
-        >
-          A-
-        </button>
-        <button
-          onClick={() => setHighlightMode((m) => !m)}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
-            highlightMode ? "bg-yellow-500 text-black" : "bg-gray-700 hover:bg-gray-600"
-          }`}
-        >
-          <Highlighter className="w-4 h-4" /> {highlightMode ? "On" : "Off"}
-        </button>
+
       </div>
 
       {/* Hero */}
-      <div className="w-full max-w-5xl mx-auto mb-10">
-        {blog?.coverImage && (
-          <Reveal
-            y={0}
-            className="w-full h-64 sm:h-80 rounded-3xl overflow-hidden mb-8 border border-gray-800"
-            style={{ transitionProperty: "opacity, transform", transitionDuration: "0.6s" }}
-          >
-            <img src={blog.coverImage} alt={blog.title} className="w-full h-full object-cover" />
-          </Reveal>
-        )}
 
-        <Reveal className="text-center">
-          <h1 className="text-3xl sm:text-5xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent leading-tight pb-2">
-            {blog?.title || "Untitled post"}
-          </h1>
-          <div className="mt-3 h-1 w-24 mx-auto bg-gradient-to-r from-blue-500 to-purple-500 rounded-full" />
+      {embedUrl ? (
+        <iframe
+          src={embedUrl}
+          title={blog.title}
+          allowFullScreen
+          className="w-full h-[250px] md:h-[450px] lg:h-[550px] rounded-3xl shadow-2xl"
+        />
+      ) : (
+        <img
+          src={blog.image}
+          alt={blog.title}
+          className="w-full h-[250px] md:h-[450px] lg:h-[550px] rounded-3xl object-cover shadow-2xl"
+        />
+      )}
 
-          <div className="mt-5 flex items-center justify-center gap-6 text-sm text-gray-400">
-            {blog?.author && <span>{blog.author}</span>}
-            {blog?.date && (
-              <span className="flex items-center gap-1.5">
-                <Calendar className="w-4 h-4" /> {blog.date}
-              </span>
-            )}
-            {blog?.readTime && (
-              <span className="flex items-center gap-1.5">
-                <Clock className="w-4 h-4" /> {blog.readTime}
-              </span>
-            )}
-          </div>
-        </Reveal>
+      {/* Article Header */}
+
+      <div className="mt-10 text-center">
+
+        <div className="flex justify-center gap-3 flex-wrap">
+
+          <span className="bg-[#239962] px-5 py-2 rounded-full flex items-center gap-2 text-sm">
+            <Folder size={15} />
+            {blog.category}
+          </span>
+
+          <span className="bg-[#202020] px-5 py-2 rounded-full flex items-center gap-2 text-sm">
+            <Calendar size={15} />
+            {new Date(
+              blog.createdAt
+            ).toLocaleDateString()}
+          </span>
+
+        </div>
+
+        <h1 className="text-4xl md:text-6xl font-extrabold mt-8 leading-tight">
+
+          {blog.title}
+
+        </h1>
+
+        <p className="text-2xl text-gray-400 mt-5 max-w-4xl mx-auto leading-relaxed">
+
+          {blog.subtitle}
+
+        </p>
+
       </div>
 
-      {/* Reading Sections */}
-      <div className="w-full max-w-5xl mx-auto space-y-8">
-        {sections.map(({ key, text, fallback }, i) => {
-          const meta = SECTION_META[key];
-          return (
-            <Reveal
-              as="section"
-              key={key}
-              delay={i * 0.1}
-              y={24}
-              className="bg-[#111111] rounded-3xl p-8 border border-gray-800 shadow-xl"
-            >
-              <div className="flex items-center gap-3 mb-6">
-                <div
-                  className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-xl shrink-0"
-                  style={{ backgroundColor: meta.accent }}
-                >
-                  {i + 1}
-                </div>
-                <div>
-                  <p className="text-sm uppercase tracking-widest text-gray-400">{meta.label}</p>
-                  <h2 className="text-3xl font-bold text-white">{meta.title}</h2>
-                </div>
-              </div>
-
-              <div className="prose prose-invert max-w-none">
-                {text ? renderParagraphs(key, text) : <p className="text-gray-500 text-lg">{fallback}</p>}
-              </div>
-            </Reveal>
-          );
-        })}
-      </div>
-
-      {/* Mobile Controls */}
-      <div className="lg:hidden fixed bottom-6 right-6 flex flex-col gap-2 bg-[#1a1a1a] p-3 rounded-2xl shadow-xl border border-gray-800 z-40">
-        <button
-          onClick={() => setFontSize((f) => Math.min(32, f + 2))}
-          className="bg-gray-700 hover:bg-gray-600 px-3 py-2 rounded-lg text-xs font-semibold"
-        >
-          A+
-        </button>
-        <button
-          onClick={() => setFontSize((f) => Math.max(12, f - 2))}
-          className="bg-gray-700 hover:bg-gray-600 px-3 py-2 rounded-lg text-xs font-semibold"
-        >
-          A-
-        </button>
-        <button
-          onClick={() => setHighlightMode((m) => !m)}
-          className={`p-2 rounded-lg text-xs font-semibold transition-all ${
-            highlightMode ? "bg-yellow-500 text-black" : "bg-gray-700 hover:bg-gray-600"
-          }`}
-        >
-          <Highlighter className="w-4 h-4" />
-        </button>
-      </div>
     </div>
-  );
+
+    {/* Reader */}
+
+    <div className="max-w-5xl mx-auto mt-14 px-6 pb-20">
+      {/* Reader */}
+
+<div className="space-y-10">
+
+  {[
+    {
+      emoji: "📖",
+      title: "PART ONE",
+      heading: "Introduction",
+      color: "#239962",
+    },
+    {
+      emoji: "🧠",
+      title: "PART TWO",
+      heading: "Main Discussion",
+      color: "#3B82F6",
+    },
+    {
+      emoji: "📚",
+      title: "PART THREE",
+      heading: "Examples & Explanation",
+      color: "#8B5CF6",
+    },
+    {
+      emoji: "🏁",
+      title: "PART FOUR",
+      heading: "Summary",
+      color: "#F97316",
+    },
+  ].map((section, index) => {
+
+    const paragraphs = blog.description
+      .split("\n\n")
+      .filter((item) => item.trim() !== "");
+
+    const quarter = Math.ceil(paragraphs.length / 4);
+
+    const content = paragraphs.slice(
+      index * quarter,
+      (index + 1) * quarter
+    );
+
+    return (
+
+      <section
+        key={index}
+        className="bg-[#111111] rounded-3xl border border-gray-800 shadow-xl overflow-hidden"
+      >
+
+        {/* Header */}
+
+        <div
+          className="px-8 py-6 border-b border-gray-800"
+          style={{
+            background: section.color,
+          }}
+        >
+
+          <div className="flex items-center gap-5">
+
+            <div className="text-5xl">
+
+              {section.emoji}
+
+            </div>
+
+            <div>
+
+              <p className="uppercase tracking-[0.3em] text-white/80 text-sm">
+
+                {section.title}
+
+              </p>
+
+              <h2 className="text-3xl font-bold text-white">
+
+                {section.heading}
+
+              </h2>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        {/* Body */}
+
+        <div className="px-10 py-10">
+
+          {content.map((paragraph, i) => (
+
+            <p
+              key={i}
+              onClick={() =>
+                highlightMode &&
+                setHighlights({
+                  ...highlights,
+                  [`${index}-${i}`]:
+                    !highlights[`${index}-${i}`],
+                })
+              }
+              style={{
+                fontSize: `${fontSize}px`,
+              }}
+              className={`mb-7 leading-10 rounded-xl px-3 py-2 transition-all duration-300 cursor-default
+              ${
+                highlights[`${index}-${i}`]
+                  ? "bg-yellow-500/30"
+                  : ""
+              }`}
+            >
+
+              {paragraph}
+
+            </p>
+
+          ))}
+
+        </div>
+
+      </section>
+
+    );
+
+  })}
+
+</div>
+        </div>
+);
+
 };
 
 export default Blog;
