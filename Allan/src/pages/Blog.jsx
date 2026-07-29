@@ -325,7 +325,7 @@ const Blog = () => {
     PART ONE
 ========================= */}
 
-<section className="bg-[#111111] rounded-3xl border border-gray-800 overflow-hidden shadow-xl">
+<section className="bg-[#111111] rounded-2xl border border-gray-800 overflow-hidden shadow-xl">
 
   <div
     className="px-8 py-6"
@@ -334,7 +334,7 @@ const Blog = () => {
 
     <div className="flex items-center gap-5">
 
-      <div className="text-5xl">
+      <div className="text-3xl">
         📖
       </div>
 
