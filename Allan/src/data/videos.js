@@ -1,27 +1,15 @@
-
-import chessThumb from "../assets/thumbnails/diani2.jpg";
 import survivalThumb from "../assets/thumbnails/diani3.jpg";
 
 export const videos = [
   {
-    id: 1,
-    title: "How to Play Chess",
-    description: "Learn the basics of chess and improve your opening strategies.",
-    thumbnail: chessThumb,
-    youtubeId: "ydEZlNJJyRg",
-    category: "Chess",
-    duration: "8:20",
-    featured: false,
-  },
-  {
     id: 2,
-    title: "How to Start a Fire — Even in the Rain",
+    title: "Making Chemical Equations & Balancing",
     description:
-      "Three methods I tested behind my school in Nairobi, ranked by how soaked the wood was.",
+      "Learn how to write and balance chemical equations using simple examples, shortcuts, and examination tips suitable for beginners and high school students.",
     thumbnail: survivalThumb,
-    youtubeId: "abcd1234",
-    category: "Survival",
-    duration: "6:42",
+    youtubeId: "08mFdOdArvg",
+    category: "Chemistry",
+    duration: "0:59",
     featured: true,
   },
 ];
