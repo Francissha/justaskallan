@@ -9,7 +9,6 @@ import Blog from "./pages/Blog";
 import About from "./pages/About";
 import Contribute from "./pages/Contribute";
 import CategoriesPage from "./pages/CategoriesPage";
-import CategoryDetails from "./pages/CategoryDetails";
 
 import Layout from "./pages/admin/Layout";
 import Dashboard from "./pages/admin/Dashboard";
@@ -33,11 +32,7 @@ const App = () => {
         <Route path="/about" element={<About />} />
         <Route path="/contribute" element={<Contribute />} />
 
-        <Route path="/categories" element={<CategoriesPage />} />
-        <Route
-          path="/categories/:category"
-          element={<CategoryDetails />}
-        />
+        <Route path="/categories" element={<CategoriesPage />} />/>
 
         <Route
           path="/admin"
