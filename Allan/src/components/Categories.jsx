@@ -1,10 +1,12 @@
-
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { categories } from "../data/categories";
 
 const Categories = () => {
   const navigate = useNavigate();
+
+  // Show only the first 3 categories
+  const featuredCategories = categories.slice(0, 3);
 
   return (
     <section className="max-w-7xl mx-auto px-6 py-12">
@@ -22,7 +24,7 @@ const Categories = () => {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {categories.map((category) => {
+        {featuredCategories.map((category) => {
           const Icon = category.icon;
 
           return (
@@ -34,7 +36,7 @@ const Categories = () => {
               <div
                 className={`w-16 h-16 rounded-full flex items-center justify-center ${category.color}`}
               >
-                <Icon className="text-3xl" />
+                <Icon size={32} />
               </div>
 
               <h3 className="mt-6 text-2xl font-semibold">
