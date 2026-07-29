@@ -1,13 +1,19 @@
 import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useAppContext } from "../context/AppContext";
 import BlogCard from "../components/BlogCard";
+import {
+  ArrowLeft,
+  Calendar,
+  Folder,
+  Share2,
+} from "lucide-react";
 
 const getYoutubeEmbedUrl = (url) => {
   if (!url) return null;
 
   const match = url.match(
-    /(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
+    /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
   );
 
   return match
@@ -17,7 +23,6 @@ const getYoutubeEmbedUrl = (url) => {
 
 const Blog = () => {
   const { id } = useParams();
-  const navigate = useNavigate();
 
   const {
     axios,
@@ -36,8 +41,8 @@ const Blog = () => {
       if (data.success) {
         setBlog(data.blog);
       }
-    } catch (error) {
-      console.log(error);
+    } catch (err) {
+      console.log(err);
     } finally {
       setLoading(false);
     }
@@ -53,7 +58,7 @@ const Blog = () => {
 
   if (loading) {
     return (
-      <div className="py-32 text-center text-2xl font-semibold">
+      <div className="min-h-screen flex justify-center items-center text-2xl font-bold">
         Loading...
       </div>
     );
@@ -61,8 +66,8 @@ const Blog = () => {
 
   if (!blog) {
     return (
-      <div className="py-32 text-center text-2xl font-semibold">
-        Blog not found.
+      <div className="min-h-screen flex justify-center items-center text-2xl font-bold">
+        Blog Not Found
       </div>
     );
   }
@@ -80,85 +85,161 @@ const Blog = () => {
     )
     .slice(0, 3);
 
+  const renderContent = () => {
+    const lines = blog.description.split("\n");
+
+    return lines.map((line, index) => {
+      const text = line.trim();
+
+      if (!text) return <br key={index} />;
+
+      // Main Heading
+      if (text === text.toUpperCase() && text.length > 8) {
+        return (
+          <h2
+            key={index}
+            className="text-3xl font-bold text-[#1B4D3E] mt-10 mb-5"
+          >
+            {text}
+          </h2>
+        );
+      }
+
+      // Numbered headings
+      if (/^\d+\./.test(text)) {
+        return (
+          <h3
+            key={index}
+            className="text-2xl font-bold mt-8 mb-3"
+          >
+            {text}
+          </h3>
+        );
+      }
+
+      // Bullet Points
+      if (text.startsWith("-")) {
+        return (
+          <li
+            key={index}
+            className="ml-8 list-disc text-lg leading-9"
+          >
+            {text.replace("-", "")}
+          </li>
+        );
+      }
+
+      return (
+        <p
+          key={index}
+          className="mb-5 text-lg leading-9 text-gray-700"
+        >
+          {text}
+        </p>
+      );
+    });
+  };
+
   return (
-    <div className="bg-white min-h-screen">
+    <div className="bg-gray-50 min-h-screen">
 
       {/* Hero */}
-      <section className="w-full  py-6">
-  <div className="max-w-6xl mx-auto px-6">
 
-    {embedUrl ? (
-      <iframe
-        src={embedUrl}
-        title={blog.title}
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-        allowFullScreen
-        className="w-full h-[220px] md:h-[340px] lg:h-[420px] rounded-2xl shadow-lg"
-      />
-    ) : (
-      <img
-        src={blog.image}
-        alt={blog.title}
-        className="w-full h-[220px] md:h-[340px] lg:h-[420px] object-cover rounded-2xl shadow-lg"
-      />
-    )}
+      <div className="max-w-7xl mx-auto py-8 px-6">
 
-  </div>
-</section>
-
-      {/* Blog Content */}
-
-      <section className="max-w-4xl mx-auto px-6 py-6">
-
-        {blog.category && (
-          <span className="inline-block bg-[#1B4D3E] text-white px-4 py-2 rounded-full text-sm">
-            {blog.category}
-          </span>
+        {embedUrl ? (
+          <iframe
+            src={embedUrl}
+            title={blog.title}
+            allowFullScreen
+            className="w-full h-[250px] md:h-[420px] lg:h-[520px] rounded-3xl shadow-xl"
+          />
+        ) : (
+          <img
+            src={blog.image}
+            alt={blog.title}
+            className="w-full h-[250px] md:h-[420px] lg:h-[520px] object-cover rounded-3xl shadow-xl"
+          />
         )}
 
-        <h1 className="text-2xl md:text-3xl font-bold text-[#1B4D3E] mt-2 leading-tight">
+      </div>
+
+      {/* Content */}
+
+      <div className="max-w-4xl mx-auto bg-white rounded-3xl shadow-lg p-10">
+
+        <div className="flex flex-wrap gap-3">
+
+          <span className="bg-[#1B4D3E] text-white px-4 py-2 rounded-full text-sm flex items-center gap-2">
+            <Folder size={15} />
+            {blog.category}
+          </span>
+
+          <span className="bg-gray-100 px-4 py-2 rounded-full text-sm flex items-center gap-2">
+            <Calendar size={15} />
+            {new Date(blog.createdAt).toLocaleDateString()}
+          </span>
+
+        </div>
+
+        <h1 className="text-5xl font-bold mt-8 text-[#1B4D3E]">
           {blog.title}
         </h1>
 
-        {blog.subtitle && (
-          <p className="text-xl text-gray-500 mt-4">
-            {blog.subtitle}
-          </p>
-        )}
+        <p className="text-2xl text-gray-500 mt-4">
+          {blog.subtitle}
+        </p>
 
-        <div className="flex gap-3 mt-6 text-gray-500 border-b pb-6">
-          <span>{new Date(blog.createdAt).toLocaleDateString()}</span>
-          <span>•</span>
-          <span>JustAskAllan</span>
+        <div className="border-b my-8"></div>
+
+        <div className="prose prose-lg max-w-none">
+          {renderContent()}
         </div>
 
-        <article className="mt-10 text-lg leading-9 text-gray-700 whitespace-pre-line">
-          {blog.description}
-        </article>
+        <div className="flex gap-4 mt-12">
 
-      </section>
+          <button
+            onClick={() => window.history.back()}
+            className="flex items-center gap-2 px-6 py-3 rounded-xl bg-[#1B4D3E] text-white hover:bg-[#16382e]"
+          >
+            <ArrowLeft size={18} />
+            Back
+          </button>
 
-      {/* Related Blogs */}
+          <button
+            onClick={() =>
+              navigator.share
+                ? navigator.share({
+                    title: blog.title,
+                    url: window.location.href,
+                  })
+                : navigator.clipboard.writeText(window.location.href)
+            }
+            className="flex items-center gap-2 px-6 py-3 rounded-xl border hover:bg-gray-100"
+          >
+            <Share2 size={18} />
+            Share
+          </button>
+
+        </div>
+
+      </div>
 
       {relatedBlogs.length > 0 && (
-        <section className="bg-gray-100 py-16">
+        <section className="max-w-7xl mx-auto py-16 px-6">
 
-          <div className="max-w-7xl mx-auto px-6">
+          <h2 className="text-4xl font-bold text-[#1B4D3E] mb-10">
+            Related Articles
+          </h2>
 
-            <h2 className="text-3xl font-bold text-[#1B4D3E] mb-8">
-              Related Articles
-            </h2>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
 
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-
-              {relatedBlogs.map((item) => (
-                <BlogCard
-                  key={item._id}
-                  blog={item}
-                />
-              ))}
-
-            </div>
+            {relatedBlogs.map((item) => (
+              <BlogCard
+                key={item._id}
+                blog={item}
+              />
+            ))}
 
           </div>
 
