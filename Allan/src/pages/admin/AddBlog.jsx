@@ -3,6 +3,7 @@ import { ImagePlus } from "lucide-react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { useAppContext } from "../../context/AppContext";
+import { categories } from "../../data/categories";
 
 const AddBlog = () => {
   const navigate = useNavigate();
@@ -113,7 +114,7 @@ const AddBlog = () => {
             {thumbnail ? (
               <img
                 src={URL.createObjectURL(thumbnail)}
-                alt=""
+                alt="Thumbnail"
                 className="w-full h-full object-cover"
               />
             ) : (
@@ -172,14 +173,24 @@ const AddBlog = () => {
             Category
           </label>
 
-          <input
-            type="text"
+          <select
             name="category"
             value={blogData.category}
             onChange={handleChange}
-            className="w-full border rounded-lg p-3"
+            className="w-full border rounded-lg p-3 bg-white"
             required
-          />
+          >
+            <option value="">Select Category</option>
+
+            {categories.map((category) => (
+              <option
+                key={category.id}
+                value={category.name}
+              >
+                {category.name}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div>
@@ -210,6 +221,7 @@ const AddBlog = () => {
               name="youtubeLink"
               value={blogData.youtubeLink}
               onChange={handleChange}
+              placeholder="https://youtube.com/watch?v=..."
               className="w-full border rounded-lg p-3"
             />
           </div>
@@ -237,7 +249,7 @@ const AddBlog = () => {
           </label>
 
           <textarea
-            rows="10"
+            rows={10}
             name="content"
             value={blogData.content}
             onChange={handleChange}
@@ -249,7 +261,7 @@ const AddBlog = () => {
         <button
           type="submit"
           disabled={loading}
-          className="bg-[#1B4D3E] text-white px-8 py-3 rounded-lg hover:bg-[#16382e]"
+          className="bg-[#1B4D3E] hover:bg-[#239962] transition text-white px-8 py-3 rounded-lg font-semibold disabled:opacity-50"
         >
           {loading ? "Publishing..." : "Publish Blog"}
         </button>
