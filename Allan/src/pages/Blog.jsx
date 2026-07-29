@@ -109,214 +109,65 @@ const Blog = () => {
       ? getYoutubeEmbedUrl(blog.youtubeLink)
       : null;
 
-  const relatedBlogs = blogs
-    .filter(
-      (item) =>
-        item._id !== blog._id &&
-        item.category === blog.category
-    )
-    .slice(0, 3);
+  const getSection = (marker) => {
+  const markers = [
+    "#INTRODUCTION",
+    "#BODY",
+    "#EXAMPLES",
+    "#CONCLUSION",
+  ];
 
-  const toggleHighlight = (key) => {
-    if (!highlightMode) return;
+  const start = blog.description.indexOf(marker);
 
-    setHighlights((prev) => ({
-      ...prev,
-      [key]: !prev[key],
-    }));
-  };
-  return (
-  <div className="min-h-screen bg-[#090909] text-white">
+  if (start === -1) return "";
 
-    {/* Reading Progress */}
+  const startContent = start + marker.length;
 
-    <div className="fixed top-0 left-0 w-full h-1 bg-[#202020] z-50">
-      <div
-        className="h-full bg-[#239962] transition-all duration-150"
-        style={{
-          width: `${progress}%`,
-        }}
-      />
-    </div>
+  let end = blog.description.length;
 
-    {/* Floating Reader Controls */}
+  markers.forEach((m) => {
+    if (m === marker) return;
 
-    <div className="hidden lg:flex fixed left-8 top-1/2 -translate-y-1/2 flex-col gap-4 z-40">
+    const pos = blog.description.indexOf(m, startContent);
 
-      <button
-        onClick={() => setFontSize(fontSize + 2)}
-        className="w-12 h-12 rounded-xl bg-[#181818] hover:bg-[#239962] transition flex justify-center items-center shadow-xl"
-      >
-        <Plus size={20} />
-      </button>
+    if (pos !== -1 && pos < end) {
+      end = pos;
+    }
+  });
 
-      <button
-        onClick={() =>
-          setFontSize(Math.max(14, fontSize - 2))
-        }
-        className="w-12 h-12 rounded-xl bg-[#181818] hover:bg-[#239962] transition flex justify-center items-center shadow-xl"
-      >
-        <Minus size={20} />
-      </button>
+  return blog.description.substring(startContent, end).trim();
+};
 
-      <button
-        onClick={() =>
-          setHighlightMode(!highlightMode)
-        }
-        className={`w-12 h-12 rounded-xl transition flex justify-center items-center shadow-xl
-        ${
-          highlightMode
-            ? "bg-yellow-500 text-black"
-            : "bg-[#181818] hover:bg-[#239962]"
-        }`}
-      >
-        <Highlighter size={20} />
-      </button>
-
-    </div>
-
-    {/* Container */}
-
-    <div className="max-w-6xl mx-auto px-6 py-10">
-
-      {/* Top Buttons */}
-
-      <div className="flex justify-between items-center flex-wrap gap-4">
-
-        <div className="flex gap-4">
-
-          <button
-            onClick={() => navigate(-1)}
-            className="bg-[#181818] hover:bg-[#239962] transition px-6 py-3 rounded-xl flex items-center gap-2"
-          >
-            <ArrowLeft size={18} />
-            Back
-          </button>
-
-          <button
-            className="bg-[#181818] hover:bg-[#239962] transition px-6 py-3 rounded-xl flex items-center gap-2"
-          >
-            <MessageSquare size={18} />
-            Reviews
-          </button>
-
-        </div>
-
-        <button
-          onClick={() => {
-            if (navigator.share) {
-              navigator.share({
-                title: blog.title,
-                url: window.location.href,
-              });
-            } else {
-              navigator.clipboard.writeText(
-                window.location.href
-              );
-            }
-          }}
-          className="bg-[#181818] hover:bg-[#239962] transition px-6 py-3 rounded-xl flex items-center gap-2"
-        >
-          <Share2 size={18} />
-          Share
-        </button>
-
-      </div>
-
-      {/* Hero */}
-
-      <div className="mt-10">
-
-        {embedUrl ? (
-          <iframe
-            src={embedUrl}
-            title={blog.title}
-            allowFullScreen
-            className="w-full h-[250px] md:h-[420px] lg:h-[540px] rounded-3xl shadow-2xl"
-          />
-        ) : (
-          <img
-            src={blog.image}
-            alt={blog.title}
-            className="w-full h-[250px] md:h-[420px] lg:h-[540px] object-cover rounded-3xl shadow-2xl"
-          />
-        )}
-
-      </div>
-
-      {/* Title */}
-
-      <div className="text-center mt-12">
-
-        <div className="flex justify-center gap-3 flex-wrap">
-
-          <span className="bg-[#239962] px-5 py-2 rounded-full flex items-center gap-2 text-sm">
-
-            <Folder size={15} />
-
-            {blog.category}
-
-          </span>
-
-          <span className="bg-[#181818] px-5 py-2 rounded-full flex items-center gap-2 text-sm">
-
-            <Calendar size={15} />
-
-            {new Date(blog.createdAt).toLocaleDateString()}
-
-          </span>
-
-        </div>
-
-        <h1 className="text-5xl lg:text-6xl font-black mt-8 leading-tight">
-
-          {blog.title}
-
-        </h1>
-
-        <p className="text-gray-400 text-2xl mt-6 max-w-4xl mx-auto">
-
-          {blog.subtitle}
-
-        </p>
-
-      </div>
-
-      {/* Reader Starts */}
-
-      <div className="mt-16">  
-        {/* =========================
-      ARTICLE READER
-========================= */}
-
-<div className="mt-20 max-w-4xl mx-auto">
-
-  {[
-    {
-      number: "01",
-      emoji: "📖",
-      title: "Introduction",
-      color: "bg-emerald-600",
-    },
-    {
-      number: "02",
-      emoji: "🧠",
-      title: "Body",
-      color: "bg-blue-600",
-    },
-    {
-      number: "03",
-      emoji: "📚",
-      title: "Examples",
-      color: "bg-purple-600",
-    },
-    {
-      number: "04",
-      emoji: "🏁",
-      title: "Conclusion",
-      color: "bg-orange-500",
-    },
-  ].map((section, sectionIndex) => {
+const sections = [
+  {
+    number: "01",
+    emoji: "📖",
+    title: "Introduction",
+    color: "#239962",
+    content: getSection("#INTRODUCTION"),
+  },
+  {
+    number: "02",
+    emoji: "🧠",
+    title: "Body",
+    color: "#2563EB",
+    content: getSection("#BODY"),
+  },
+  {
+    number: "03",
+    emoji: "📚",
+    title: "Examples",
+    color: "#8B5CF6",
+    content: getSection("#EXAMPLES"),
+  },
+  {
+    number: "04",
+    emoji: "🏁",
+    title: "Conclusion",
+    color: "#F97316",
+    content: getSection("#CONCLUSION"),
+  },
+];.map((section, sectionIndex) => {
 
     const paragraphs = blog.description
       .split("\n\n")
