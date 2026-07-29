@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
-import { motion, useScroll, useSpring } from "framer-motion";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Highlighter, Clock, Calendar } from "lucide-react";
 
 const SECTION_META = {
@@ -9,11 +8,56 @@ const SECTION_META = {
   body: { label: "Section Two", title: "Body", accent: "#3B82F6" },
   conclusion: { label: "Final Section", title: "Conclusion", accent: "#F97316" },
 };
+const useInView = (options = {}) => {
+  const ref = useRef(null);
+  const [isInView, setIsInView] = useState(false);
+
+  useEffect(() => {
+    const node = ref.current;
+    if (!node) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsInView(true);
+          observer.disconnect(); // once: true behavior
+        }
+      },
+      { threshold: 0.1, rootMargin: "-60px", ...options }
+    );
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+
+  return [ref, isInView];
+};
+
+// Fade/slide-up wrapper, drop-in replacement for <motion.div initial/whileInView>
+const Reveal = ({ as: Tag = "div", delay = 0, y = 20, className = "", style = {}, children, ...rest }) => {
+  const [ref, isInView] = useInView();
+  return (
+    <Tag
+      ref={ref}
+      className={className}
+      style={{
+        opacity: isInView ? 1 : 0,
+        transform: isInView ? "translateY(0)" : `translateY(${y}px)`,
+        transition: `opacity 0.5s ease ${delay}s, transform 0.5s ease ${delay}s`,
+        ...style,
+      }}
+      {...rest}
+    >
+      {children}
+    </Tag>
+  );
+};
 
 const Blog = ({ blog }) => {
   const [fontSize, setFontSize] = useState(18);
   const [highlightMode, setHighlightMode] = useState(false);
   const [highlights, setHighlights] = useState({});
+  const [progress, setProgress] = useState(0);
 
   const highlightsKey = `blog_highlights_${blog?.id ?? "draft"}`;
 
@@ -32,10 +76,19 @@ const Blog = ({ blog }) => {
     setHighlights((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
-  // Scroll-based reading progress, in keeping with the pagination progress dots
-  const containerRef = useRef(null);
-  const { scrollYProgress } = useScroll({ target: containerRef, offset: ["start start", "end end"] });
-  const progress = useSpring(scrollYProgress, { stiffness: 120, damping: 24 });
+  // Scroll-based reading progress, replacing framer's useScroll/useSpring
+  const handleScroll = useCallback(() => {
+    const doc = document.documentElement;
+    const scrollTop = window.scrollY || doc.scrollTop;
+    const maxScroll = doc.scrollHeight - doc.clientHeight;
+    setProgress(maxScroll > 0 ? Math.min(1, scrollTop / maxScroll) : 0);
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [handleScroll]);
 
   const sections = [
     { key: "introduction", text: blog?.introduction, fallback: "No introduction available." },
@@ -52,38 +105,36 @@ const Blog = ({ blog }) => {
       const isHighlighted = highlights[key];
 
       return (
-        <motion.p
+        <Reveal
+          as="p"
           key={key}
-          initial={{ opacity: 0, y: 10 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-60px" }}
-          transition={{ duration: 0.3, delay: index * 0.05 }}
+          delay={index * 0.05}
+          y={10}
           onClick={() => toggleHighlight(sectionKey, index)}
-          className={`mb-5 rounded-lg px-3 py-1 transition-all duration-300 leading-9 text-lg ${
+          className={`mb-5 rounded-lg px-3 py-1 transition-colors duration-300 leading-9 text-lg ${
             highlightMode ? "cursor-pointer" : ""
           } ${
-            isHighlighted
-              ? "bg-yellow-500/30 text-white"
-              : "text-gray-300 hover:bg-gray-800/30"
+            isHighlighted ? "bg-yellow-500/30 text-white" : "text-gray-300 hover:bg-gray-800/30"
           }`}
           style={{ fontSize: `${fontSize}px` }}
         >
           {paragraph}
-        </motion.p>
+        </Reveal>
       );
     });
   };
 
   return (
-    <div
-      ref={containerRef}
-      className="relative bg-gradient-to-br from-[#0a0a0a] via-[#0f0f0f] to-[#0a0a0a] min-h-screen text-white py-10 px-4 sm:px-6"
-    >
+    <div className="relative bg-gradient-to-br from-[#0a0a0a] via-[#0f0f0f] to-[#0a0a0a] min-h-screen text-white py-10 px-4 sm:px-6">
       {/* Reading progress rail */}
       <div className="fixed top-0 left-0 right-0 h-1 bg-gray-800 z-50">
-        <motion.div
+        <div
           className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"
-          style={{ scaleX: progress, transformOrigin: "0% 50%" }}
+          style={{
+            transform: `scaleX(${progress})`,
+            transformOrigin: "0% 50%",
+            transition: "transform 0.1s linear",
+          }}
         />
       </div>
 
@@ -114,22 +165,16 @@ const Blog = ({ blog }) => {
       {/* Hero */}
       <div className="w-full max-w-5xl mx-auto mb-10">
         {blog?.coverImage && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6 }}
+          <Reveal
+            y={0}
             className="w-full h-64 sm:h-80 rounded-3xl overflow-hidden mb-8 border border-gray-800"
+            style={{ transitionProperty: "opacity, transform", transitionDuration: "0.6s" }}
           >
             <img src={blog.coverImage} alt={blog.title} className="w-full h-full object-cover" />
-          </motion.div>
+          </Reveal>
         )}
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="text-center"
-        >
+        <Reveal className="text-center">
           <h1 className="text-3xl sm:text-5xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent leading-tight pb-2">
             {blog?.title || "Untitled post"}
           </h1>
@@ -148,7 +193,7 @@ const Blog = ({ blog }) => {
               </span>
             )}
           </div>
-        </motion.div>
+        </Reveal>
       </div>
 
       {/* Reading Sections */}
@@ -156,12 +201,11 @@ const Blog = ({ blog }) => {
         {sections.map(({ key, text, fallback }, i) => {
           const meta = SECTION_META[key];
           return (
-            <motion.section
+            <Reveal
+              as="section"
               key={key}
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-80px" }}
-              transition={{ duration: 0.5, delay: i * 0.1 }}
+              delay={i * 0.1}
+              y={24}
               className="bg-[#111111] rounded-3xl p-8 border border-gray-800 shadow-xl"
             >
               <div className="flex items-center gap-3 mb-6">
@@ -178,11 +222,9 @@ const Blog = ({ blog }) => {
               </div>
 
               <div className="prose prose-invert max-w-none">
-                {text ? renderParagraphs(key, text) : (
-                  <p className="text-gray-500 text-lg">{fallback}</p>
-                )}
+                {text ? renderParagraphs(key, text) : <p className="text-gray-500 text-lg">{fallback}</p>}
               </div>
-            </motion.section>
+            </Reveal>
           );
         })}
       </div>
