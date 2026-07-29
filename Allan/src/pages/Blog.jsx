@@ -1,251 +1,215 @@
-import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import { useAppContext } from "../context/AppContext";
-import BlogCard from "../components/BlogCard";
-import {
-  ArrowLeft,
-  Calendar,
-  Folder,
-  Share2,
-} from "lucide-react";
+"use client";
 
-const getYoutubeEmbedUrl = (url) => {
-  if (!url) return null;
+import React, { useState, useEffect, useRef } from "react";
+import { motion, useScroll, useSpring } from "framer-motion";
+import { Highlighter, Clock, Calendar } from "lucide-react";
 
-  const match = url.match(
-    /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
-  );
-
-  return match
-    ? `https://www.youtube.com/embed/${match[1]}`
-    : null;
+const SECTION_META = {
+  introduction: { label: "Section One", title: "Introduction", accent: "#239962" },
+  body: { label: "Section Two", title: "Body", accent: "#3B82F6" },
+  conclusion: { label: "Final Section", title: "Conclusion", accent: "#F97316" },
 };
 
-const Blog = () => {
-  const { id } = useParams();
+const Blog = ({ blog }) => {
+  const [fontSize, setFontSize] = useState(18);
+  const [highlightMode, setHighlightMode] = useState(false);
+  const [highlights, setHighlights] = useState({});
 
-  const {
-    axios,
-    backendUrl,
-    blogs,
-    fetchAllBlogs,
-  } = useAppContext();
-
-  const [blog, setBlog] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  const fetchBlog = async () => {
-    try {
-      const { data } = await axios.get(`${backendUrl}/api/blog/${id}`);
-
-      if (data.success) {
-        setBlog(data.blog);
-      }
-    } catch (err) {
-      console.log(err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const highlightsKey = `blog_highlights_${blog?.id ?? "draft"}`;
 
   useEffect(() => {
-    fetchBlog();
+    const stored = localStorage.getItem(highlightsKey);
+    if (stored) setHighlights(JSON.parse(stored));
+  }, [highlightsKey]);
 
-    if (blogs.length === 0) {
-      fetchAllBlogs();
-    }
-  }, [id]);
+  useEffect(() => {
+    localStorage.setItem(highlightsKey, JSON.stringify(highlights));
+  }, [highlights, highlightsKey]);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex justify-center items-center text-2xl font-bold">
-        Loading...
-      </div>
-    );
-  }
+  const toggleHighlight = (sectionKey, paraIndex) => {
+    if (!highlightMode) return;
+    const key = `${sectionKey}-${paraIndex}`;
+    setHighlights((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
 
-  if (!blog) {
-    return (
-      <div className="min-h-screen flex justify-center items-center text-2xl font-bold">
-        Blog Not Found
-      </div>
-    );
-  }
+  // Scroll-based reading progress, in keeping with the pagination progress dots
+  const containerRef = useRef(null);
+  const { scrollYProgress } = useScroll({ target: containerRef, offset: ["start start", "end end"] });
+  const progress = useSpring(scrollYProgress, { stiffness: 120, damping: 24 });
 
-  const embedUrl =
-    blog.type === "Video"
-      ? getYoutubeEmbedUrl(blog.youtubeLink)
-      : null;
+  const sections = [
+    { key: "introduction", text: blog?.introduction, fallback: "No introduction available." },
+    { key: "body", text: blog?.body || blog?.description, fallback: "No body content available." },
+    { key: "conclusion", text: blog?.conclusion, fallback: "No conclusion available." },
+  ];
 
-  const relatedBlogs = blogs
-    .filter(
-      (item) =>
-        item._id !== blog._id &&
-        item.category === blog.category
-    )
-    .slice(0, 3);
+  const renderParagraphs = (sectionKey, text) => {
+    const paragraphs = (text || "").split(/\n+/).filter((p) => p.trim() !== "");
+    if (paragraphs.length === 0) return null;
 
-  const renderContent = () => {
-    const lines = blog.description.split("\n");
-
-    return lines.map((line, index) => {
-      const text = line.trim();
-
-      if (!text) return <br key={index} />;
-
-      // Main Heading
-      if (text === text.toUpperCase() && text.length > 8) {
-        return (
-          <h2
-            key={index}
-            className="text-3xl font-bold text-[#1B4D3E] mt-10 mb-5"
-          >
-            {text}
-          </h2>
-        );
-      }
-
-      // Numbered headings
-      if (/^\d+\./.test(text)) {
-        return (
-          <h3
-            key={index}
-            className="text-2xl font-bold mt-8 mb-3"
-          >
-            {text}
-          </h3>
-        );
-      }
-
-      // Bullet Points
-      if (text.startsWith("-")) {
-        return (
-          <li
-            key={index}
-            className="ml-8 list-disc text-lg leading-9"
-          >
-            {text.replace("-", "")}
-          </li>
-        );
-      }
+    return paragraphs.map((paragraph, index) => {
+      const key = `${sectionKey}-${index}`;
+      const isHighlighted = highlights[key];
 
       return (
-        <p
-          key={index}
-          className="mb-5 text-lg leading-9 text-gray-700"
+        <motion.p
+          key={key}
+          initial={{ opacity: 0, y: 10 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-60px" }}
+          transition={{ duration: 0.3, delay: index * 0.05 }}
+          onClick={() => toggleHighlight(sectionKey, index)}
+          className={`mb-5 rounded-lg px-3 py-1 transition-all duration-300 leading-9 text-lg ${
+            highlightMode ? "cursor-pointer" : ""
+          } ${
+            isHighlighted
+              ? "bg-yellow-500/30 text-white"
+              : "text-gray-300 hover:bg-gray-800/30"
+          }`}
+          style={{ fontSize: `${fontSize}px` }}
         >
-          {text}
-        </p>
+          {paragraph}
+        </motion.p>
       );
     });
   };
 
   return (
-    <div className="bg-gray-50 min-h-screen">
+    <div
+      ref={containerRef}
+      className="relative bg-gradient-to-br from-[#0a0a0a] via-[#0f0f0f] to-[#0a0a0a] min-h-screen text-white py-10 px-4 sm:px-6"
+    >
+      {/* Reading progress rail */}
+      <div className="fixed top-0 left-0 right-0 h-1 bg-gray-800 z-50">
+        <motion.div
+          className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"
+          style={{ scaleX: progress, transformOrigin: "0% 50%" }}
+        />
+      </div>
+
+      {/* Side Controls */}
+      <div className="hidden lg:flex flex-col items-center fixed left-6 top-1/3 bg-[#1a1a1a] p-4 rounded-2xl shadow-xl space-y-3 border border-gray-800 z-40">
+        <button
+          onClick={() => setFontSize((f) => Math.min(32, f + 2))}
+          className="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg text-sm font-semibold transition-all"
+        >
+          A+
+        </button>
+        <button
+          onClick={() => setFontSize((f) => Math.max(12, f - 2))}
+          className="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg text-sm font-semibold transition-all"
+        >
+          A-
+        </button>
+        <button
+          onClick={() => setHighlightMode((m) => !m)}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+            highlightMode ? "bg-yellow-500 text-black" : "bg-gray-700 hover:bg-gray-600"
+          }`}
+        >
+          <Highlighter className="w-4 h-4" /> {highlightMode ? "On" : "Off"}
+        </button>
+      </div>
 
       {/* Hero */}
-
-      <div className="max-w-7xl mx-auto py-8 px-6">
-
-        {embedUrl ? (
-          <iframe
-            src={embedUrl}
-            title={blog.title}
-            allowFullScreen
-            className="w-full h-[250px] md:h-[420px] lg:h-[520px] rounded-3xl shadow-xl"
-          />
-        ) : (
-          <img
-            src={blog.image}
-            alt={blog.title}
-            className="w-full h-[250px] md:h-[420px] lg:h-[520px] object-cover rounded-3xl shadow-xl"
-          />
+      <div className="w-full max-w-5xl mx-auto mb-10">
+        {blog?.coverImage && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.6 }}
+            className="w-full h-64 sm:h-80 rounded-3xl overflow-hidden mb-8 border border-gray-800"
+          >
+            <img src={blog.coverImage} alt={blog.title} className="w-full h-full object-cover" />
+          </motion.div>
         )}
 
-      </div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="text-center"
+        >
+          <h1 className="text-3xl sm:text-5xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent leading-tight pb-2">
+            {blog?.title || "Untitled post"}
+          </h1>
+          <div className="mt-3 h-1 w-24 mx-auto bg-gradient-to-r from-blue-500 to-purple-500 rounded-full" />
 
-      {/* Content */}
-
-      <div className="max-w-4xl mx-auto bg-white rounded-3xl shadow-lg p-10">
-
-        <div className="flex flex-wrap gap-3">
-
-          <span className="bg-[#1B4D3E] text-white px-4 py-2 rounded-full text-sm flex items-center gap-2">
-            <Folder size={15} />
-            {blog.category}
-          </span>
-
-          <span className="bg-gray-100 px-4 py-2 rounded-full text-sm flex items-center gap-2">
-            <Calendar size={15} />
-            {new Date(blog.createdAt).toLocaleDateString()}
-          </span>
-
-        </div>
-
-        <h1 className="text-5xl font-bold mt-8 text-[#1B4D3E]">
-          {blog.title}
-        </h1>
-
-        <p className="text-2xl text-gray-500 mt-4">
-          {blog.subtitle}
-        </p>
-
-        <div className="border-b my-8"></div>
-
-        <div className="prose prose-lg max-w-none">
-          {renderContent()}
-        </div>
-
-        <div className="flex gap-4 mt-12">
-
-          <button
-            onClick={() => window.history.back()}
-            className="flex items-center gap-2 px-6 py-3 rounded-xl bg-[#1B4D3E] text-white hover:bg-[#16382e]"
-          >
-            <ArrowLeft size={18} />
-            Back
-          </button>
-
-          <button
-            onClick={() =>
-              navigator.share
-                ? navigator.share({
-                    title: blog.title,
-                    url: window.location.href,
-                  })
-                : navigator.clipboard.writeText(window.location.href)
-            }
-            className="flex items-center gap-2 px-6 py-3 rounded-xl border hover:bg-gray-100"
-          >
-            <Share2 size={18} />
-            Share
-          </button>
-
-        </div>
-
-      </div>
-
-      {relatedBlogs.length > 0 && (
-        <section className="max-w-7xl mx-auto py-16 px-6">
-
-          <h2 className="text-4xl font-bold text-[#1B4D3E] mb-10">
-            Related Articles
-          </h2>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-
-            {relatedBlogs.map((item) => (
-              <BlogCard
-                key={item._id}
-                blog={item}
-              />
-            ))}
-
+          <div className="mt-5 flex items-center justify-center gap-6 text-sm text-gray-400">
+            {blog?.author && <span>{blog.author}</span>}
+            {blog?.date && (
+              <span className="flex items-center gap-1.5">
+                <Calendar className="w-4 h-4" /> {blog.date}
+              </span>
+            )}
+            {blog?.readTime && (
+              <span className="flex items-center gap-1.5">
+                <Clock className="w-4 h-4" /> {blog.readTime}
+              </span>
+            )}
           </div>
+        </motion.div>
+      </div>
 
-        </section>
-      )}
+      {/* Reading Sections */}
+      <div className="w-full max-w-5xl mx-auto space-y-8">
+        {sections.map(({ key, text, fallback }, i) => {
+          const meta = SECTION_META[key];
+          return (
+            <motion.section
+              key={key}
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-80px" }}
+              transition={{ duration: 0.5, delay: i * 0.1 }}
+              className="bg-[#111111] rounded-3xl p-8 border border-gray-800 shadow-xl"
+            >
+              <div className="flex items-center gap-3 mb-6">
+                <div
+                  className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-xl shrink-0"
+                  style={{ backgroundColor: meta.accent }}
+                >
+                  {i + 1}
+                </div>
+                <div>
+                  <p className="text-sm uppercase tracking-widest text-gray-400">{meta.label}</p>
+                  <h2 className="text-3xl font-bold text-white">{meta.title}</h2>
+                </div>
+              </div>
 
+              <div className="prose prose-invert max-w-none">
+                {text ? renderParagraphs(key, text) : (
+                  <p className="text-gray-500 text-lg">{fallback}</p>
+                )}
+              </div>
+            </motion.section>
+          );
+        })}
+      </div>
+
+      {/* Mobile Controls */}
+      <div className="lg:hidden fixed bottom-6 right-6 flex flex-col gap-2 bg-[#1a1a1a] p-3 rounded-2xl shadow-xl border border-gray-800 z-40">
+        <button
+          onClick={() => setFontSize((f) => Math.min(32, f + 2))}
+          className="bg-gray-700 hover:bg-gray-600 px-3 py-2 rounded-lg text-xs font-semibold"
+        >
+          A+
+        </button>
+        <button
+          onClick={() => setFontSize((f) => Math.max(12, f - 2))}
+          className="bg-gray-700 hover:bg-gray-600 px-3 py-2 rounded-lg text-xs font-semibold"
+        >
+          A-
+        </button>
+        <button
+          onClick={() => setHighlightMode((m) => !m)}
+          className={`p-2 rounded-lg text-xs font-semibold transition-all ${
+            highlightMode ? "bg-yellow-500 text-black" : "bg-gray-700 hover:bg-gray-600"
+          }`}
+        >
+          <Highlighter className="w-4 h-4" />
+        </button>
+      </div>
     </div>
   );
 };
