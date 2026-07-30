@@ -261,13 +261,13 @@ const Header = () => {
 
         <div>
 
-          <h2 className="text-2xl font-bold text-[#1B4D3E]">
+          <h2 className="text-xl font-bold text-[#1B4D3E]">
 
             📚 This Week's Cause
 
           </h2>
 
-          <p className="text-gray-700 mt-3 max-w-2xl">
+          <p className="text-gray-700 mt-3 max-w-xl">
 
             Help provide new books to St. Stephen Primary School.
             Together we have raised
