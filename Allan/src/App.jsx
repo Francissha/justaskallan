@@ -15,7 +15,7 @@ import Dashboard from "./pages/admin/Dashboard";
 import AddBlog from "./pages/admin/AddBlog";
 import EditBlog from "./pages/admin/EditBlog";
 import ListBlog from "./pages/admin/ListBlog";
-import Comments from "./pages/admin/Comments";
+import AdminComments from "./pages/admin/Comments";
 import Comments from "./pages/Comments";
 
 import Login from "./components/admin/Login";
@@ -45,7 +45,7 @@ const App = () => {
           <Route path="add-blog" element={<AddBlog />} />
           <Route path="edit-blog/:id" element={<EditBlog />} />
           <Route path="list-blog" element={<ListBlog />} />
-          <Route path="comments" element={<Comments />} />
+          <Route path="comments" element={<AdminComments />} />
         </Route>
 
         <Route
