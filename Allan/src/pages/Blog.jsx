@@ -237,12 +237,13 @@ const Blog = () => {
               Back
             </button>
 
-            <button
-              className="flex items-center gap-2 bg-[#181818] hover:bg-[#239962] px-5 py-3 rounded-xl transition"
-            >
-              <MessageSquare size={18} />
-              Reviews
-            </button>
+           <button
+  onClick={() => navigate(`/comments/${blog._id}`)}
+  className="flex items-center gap-2 bg-[#181818] hover:bg-[#239962] px-5 py-3 rounded-xl transition"
+>
+  <MessageSquare size={18} />
+  Comments
+</button>
 
           </div>
 
