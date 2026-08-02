@@ -16,6 +16,7 @@ import AddBlog from "./pages/admin/AddBlog";
 import EditBlog from "./pages/admin/EditBlog";
 import ListBlog from "./pages/admin/ListBlog";
 import Comments from "./pages/admin/Comments";
+import Comments from "./pages/Comments";
 
 import Login from "./components/admin/Login";
 
@@ -31,6 +32,8 @@ const App = () => {
         <Route path="/blog/:id" element={<Blog />} />
         <Route path="/about" element={<About />} />
         <Route path="/contribute" element={<Contribute />} />
+        <Route path="/comments/:id" element={<Comments />}
+/>
 
         <Route path="/categories" element={<CategoriesPage />} />
 
