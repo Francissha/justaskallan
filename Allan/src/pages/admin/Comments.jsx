@@ -3,7 +3,7 @@ import React from "react";
 import { comments } from "../../data/comments";
 import { CheckCircle, XCircle } from "lucide-react";
 
-const Comments = () => {
+const AdminComments = () => {
   return (
     <div className="flex-1 p-8 bg-gray-50">
 
@@ -65,7 +65,7 @@ const Comments = () => {
                     </button>
 
                     <button className="text-red-600 hover:text-red-800">
-                      <XCircle size={20} />
+                      <XCircle 15 │ import Comments from "./pages/admin/Comments"; size={20} />
                     </button>
 
                   </div>
@@ -83,4 +83,4 @@ const Comments = () => {
   );
 };
 
-export default Comments;
+export default AdminComments;
