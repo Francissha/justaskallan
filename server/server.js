@@ -21,7 +21,12 @@ app.use(express.urlencoded({ extended: true }));
 // CORS
 const allowedOrigins = [
   "http://localhost:5173",
+  // Production Frontend
+  "https://www.justaskallan.com",
+  "https://justaskallan.com",
+  // Old Vercel Frontend
   "https://justaskallanke.vercel.app",
+  // Backend URL (optional)
   "https://justaskallan.vercel.app",
   process.env.FRONTEND_URL,
 ].filter(Boolean);
