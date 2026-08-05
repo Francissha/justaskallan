@@ -64,10 +64,9 @@ const AdminComments = () => {
                       <CheckCircle size={20} />
                     </button>
 
-                    <button className="text-red-600 hover:text-red-800">
-                      <XCircle 15 │ import Comments from "./pages/admin/Comments"; size={20} />
-                    </button>
-
+<button className="text-red-600 hover:text-red-800">
+  <XCircle size={20} />
+</button>
                   </div>
                 </td>
               </tr>
