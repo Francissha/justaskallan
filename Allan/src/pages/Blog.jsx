@@ -315,10 +315,19 @@ const Blog = () => {
 
         </div>
         <div className="max-w-4xl mx-auto mt-16">
+  {renderContent()}
 
-          {renderContent()}
-
-        </div>
+  {/* Quiz Button */}
+  <div className="flex justify-center mt-14">
+    <button
+      onClick={() => navigate(`/quiz/${blog._id}`)}
+      className="bg-[#239962] hover:bg-[#1d7c4d] text-white px-10 py-4 rounded-full text-lg font-bold shadow-lg transition duration-300 flex items-center gap-3"
+    >
+      <MessageSquare size={22} />
+      Take Quiz
+    </button>
+  </div>
+</div>
         {relatedBlogs.length > 0 && (
 
           <div className="mt-24">
