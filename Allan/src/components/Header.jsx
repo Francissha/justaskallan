@@ -23,19 +23,21 @@ const Header = () => {
   const [search, setSearch] = useState("");
 
   // Random Featured Video
-  const featuredVideo = useMemo(() => {
-    const videos = blogs.filter(
+ const featuredVideo = useMemo(() => {
+  const videos = blogs
+    .filter(
       (blog) =>
         blog.type === "Video" &&
         blog.youtubeLink
+    )
+    .sort(
+      (a, b) =>
+        new Date(b.createdAt) -
+        new Date(a.createdAt)
     );
 
-    if (!videos.length) return null;
-
-    return videos[
-      Math.floor(Math.random() * videos.length)
-    ];
-  }, [blogs]);
+  return videos[0] || null;
+}, [blogs]);
 
   // Search Results
   const filteredBlogs = useMemo(() => {
@@ -194,12 +196,12 @@ const Header = () => {
               className="w-full h-[380px] object-cover"
             />
 
-            <a
-              href={featuredVideo.youtubeLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="absolute inset-0 flex items-center justify-center group"
-            >
+            <div
+  onClick={() =>
+    navigate(`/video/${featuredVideo._id}`)
+  }
+  className="absolute inset-0 flex items-center justify-center cursor-pointer group"
+>
               <div className="bg-[#239962] p-6 rounded-full shadow-2xl group-hover:scale-110 transition duration-300">
 
                 <FaPlay className="text-white text-3xl ml-1" />
@@ -237,18 +239,15 @@ const Header = () => {
 
             </p>
 
-            <a
-              href={featuredVideo.youtubeLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-3 mt-8 bg-[#239962] hover:bg-[#1d7c4d] text-white px-8 py-4 rounded-full font-semibold transition"
-            >
-
-              <FaPlay />
-
-              Watch on YouTube
-
-            </a>
+          <button
+  onClick={() =>
+    navigate(`/video/${featuredVideo._id}`)
+  }
+  className="inline-flex items-center gap-3 mt-8 bg-[#239962] hover:bg-[#1d7c4d] text-white px-8 py-4 rounded-full font-semibold transition"
+>
+  <FaPlay />
+  Watch Video
+</button>
 
           </div>
 
