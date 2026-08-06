@@ -13,10 +13,21 @@ const getYoutubeThumbnail = (url) => {
   return match ? `https://img.youtube.com/vi/${match[1]}/hqdefault.jpg` : "";
 };
 
+const getYoutubeEmbedUrl = (url) => {
+  if (!url) return "";
+
+  const match = url.match(
+    /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
+  );
+
+  return match ? `https://www.youtube.com/embed/${match[1]}?autoplay=1` : "";
+};
+
 const Header = () => {
   const navigate = useNavigate();
   const { blogs } = useAppContext();
   const [search, setSearch] = useState("");
+  const [isPlaying, setIsPlaying] = useState(false);
 
   // Most Recently Uploaded Video
   const featuredVideo = useMemo(() => {
@@ -52,10 +63,6 @@ const Header = () => {
       navigate(`/blog/${filteredBlogs[0]._id}`);
       setSearch("");
     }
-  };
-
-  const goToVideo = () => {
-    if (featuredVideo) navigate(`/blog/${featuredVideo._id}`);
   };
 
   return (
@@ -131,29 +138,41 @@ const Header = () => {
         </div>
       </form>
 
-      {/* FEATURED VIDEO — most recently uploaded, plays on-site */}
+      {/* FEATURED VIDEO — plays inline on the home page */}
       {featuredVideo && (
         <div className="grid md:grid-cols-2 gap-10 mt-12 items-center">
-          {/* Thumbnail */}
-          <div className="relative rounded-3xl overflow-hidden shadow-2xl">
-            <img
-              src={getYoutubeThumbnail(featuredVideo.youtubeLink)}
-              alt={featuredVideo.title}
-              className="w-full h-[380px] object-cover"
-            />
+          {/* Player / Thumbnail */}
+          <div className="relative rounded-3xl overflow-hidden shadow-2xl aspect-video">
+            {isPlaying ? (
+              <iframe
+                src={getYoutubeEmbedUrl(featuredVideo.youtubeLink)}
+                title={featuredVideo.title}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="w-full h-full"
+              />
+            ) : (
+              <>
+                <img
+                  src={getYoutubeThumbnail(featuredVideo.youtubeLink)}
+                  alt={featuredVideo.title}
+                  className="w-full h-full object-cover"
+                />
 
-            <div
-              onClick={goToVideo}
-              className="absolute inset-0 flex items-center justify-center cursor-pointer group"
-            >
-              <div className="bg-[#239962] p-6 rounded-full shadow-2xl group-hover:scale-110 transition duration-300">
-                <FaPlay className="text-white text-3xl ml-1" />
-              </div>
-            </div>
+                <div
+                  onClick={() => setIsPlaying(true)}
+                  className="absolute inset-0 flex items-center justify-center cursor-pointer group"
+                >
+                  <div className="bg-[#239962] p-6 rounded-full shadow-2xl group-hover:scale-110 transition duration-300">
+                    <FaPlay className="text-white text-3xl ml-1" />
+                  </div>
+                </div>
 
-            <div className="absolute bottom-5 left-5 bg-white px-5 py-2 rounded-xl shadow-lg font-semibold">
-              🎬 Featured Video
-            </div>
+                <div className="absolute bottom-5 left-5 bg-white px-5 py-2 rounded-xl shadow-lg font-semibold">
+                  🎬 Featured Video
+                </div>
+              </>
+            )}
           </div>
 
           {/* Video Details */}
@@ -170,13 +189,15 @@ const Header = () => {
               {featuredVideo.subtitle}
             </p>
 
-            <button
-              onClick={goToVideo}
-              className="inline-flex items-center gap-3 mt-8 bg-[#239962] hover:bg-[#1d7c4d] text-white px-8 py-4 rounded-full font-semibold transition"
-            >
-              <FaPlay />
-              Watch Video
-            </button>
+            {!isPlaying && (
+              <button
+                onClick={() => setIsPlaying(true)}
+                className="inline-flex items-center gap-3 mt-8 bg-[#239962] hover:bg-[#1d7c4d] text-white px-8 py-4 rounded-full font-semibold transition"
+              >
+                <FaPlay />
+                Watch Video
+              </button>
+            )}
           </div>
         </div>
       )}
