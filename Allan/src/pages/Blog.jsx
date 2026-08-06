@@ -6,6 +6,7 @@ import {
   Calendar,
   Folder,
   MessageSquare,
+  HelpCircle,
   Plus,
   Minus,
   Highlighter,
@@ -21,21 +22,14 @@ const getYoutubeEmbedUrl = (url) => {
     /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
   );
 
-  return match
-    ? `https://www.youtube.com/embed/${match[1]}`
-    : null;
+  return match ? `https://www.youtube.com/embed/${match[1]}` : null;
 };
 
 const Blog = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const {
-    axios,
-    backendUrl,
-    blogs,
-    fetchAllBlogs,
-  } = useAppContext();
+  const { axios, backendUrl, blogs, fetchAllBlogs } = useAppContext();
 
   const [blog, setBlog] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -48,9 +42,7 @@ const Blog = () => {
 
   const fetchBlog = async () => {
     try {
-      const { data } = await axios.get(
-        `${backendUrl}/api/blog/${id}`
-      );
+      const { data } = await axios.get(`${backendUrl}/api/blog/${id}`);
 
       if (data.success) {
         setBlog(data.blog);
@@ -74,22 +66,16 @@ const Blog = () => {
   useEffect(() => {
     const handleScroll = () => {
       const total =
-        document.documentElement.scrollHeight -
-        document.documentElement.clientHeight;
+        document.documentElement.scrollHeight - document.documentElement.clientHeight;
 
-      const current =
-        document.documentElement.scrollTop;
+      const current = document.documentElement.scrollTop;
 
       setProgress((current / total) * 100);
     };
 
     window.addEventListener("scroll", handleScroll);
 
-    return () =>
-      window.removeEventListener(
-        "scroll",
-        handleScroll
-      );
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   if (loading)
@@ -106,17 +92,11 @@ const Blog = () => {
       </div>
     );
 
-  const embedUrl =
-    blog.type === "Video"
-      ? getYoutubeEmbedUrl(blog.youtubeLink)
-      : null;
+  const embedUrl = blog.type === "Video" ? getYoutubeEmbedUrl(blog.youtubeLink) : null;
+  const hasQuiz = Array.isArray(blog.quiz) && blog.quiz.length > 0;
 
   const relatedBlogs = blogs
-    .filter(
-      (item) =>
-        item._id !== blog._id &&
-        item.category === blog.category
-    )
+    .filter((item) => item._id !== blog._id && item.category === blog.category)
     .slice(0, 3);
 
   const toggleHighlight = (index) => {
@@ -130,20 +110,14 @@ const Blog = () => {
 
   // Automatic article renderer
   const renderContent = () => {
-    const lines = blog.description
-      .split("\n")
-      .filter((line) => line.trim() !== "");
+    const lines = blog.description.split("\n").filter((line) => line.trim() !== "");
 
     return lines.map((line, index) => {
       const text = line.trim();
 
-      // Numbered heading
       if (/^\d+\./.test(text)) {
         return (
-          <h2
-            key={index}
-            className="text-4xl font-black text-[#239962] mt-14 mb-6"
-          >
+          <h2 key={index} className="text-3xl font-black text-[#239962] mt-8 mb-3">
             {text}
           </h2>
         );
@@ -156,7 +130,7 @@ const Blog = () => {
           style={{
             fontSize: `${fontSize}px`,
           }}
-          className={`leading-10 mb-6 rounded-xl px-3 py-2 transition duration-300 ${
+          className={`leading-7 mb-3 rounded-xl px-3 py-1 transition duration-300 ${
             highlights[index]
               ? "bg-yellow-400/20 border-l-4 border-yellow-400"
               : "hover:bg-white/5"
@@ -170,9 +144,7 @@ const Blog = () => {
 
   return (
     <div className="bg-[#080808] text-white min-h-screen">
-
       {/* Reading Progress */}
-
       <div className="fixed top-0 left-0 h-1 w-full bg-gray-800 z-50">
         <div
           className="h-full bg-[#239962] transition-all"
@@ -183,9 +155,7 @@ const Blog = () => {
       </div>
 
       {/* Reader Controls */}
-
       <div className="hidden lg:flex fixed left-8 top-1/2 -translate-y-1/2 flex-col gap-4 z-40">
-
         <button
           onClick={() => setFontSize((prev) => prev + 2)}
           className="w-12 h-12 rounded-xl bg-[#1B1B1B] hover:bg-[#239962] flex justify-center items-center"
@@ -194,41 +164,27 @@ const Blog = () => {
         </button>
 
         <button
-          onClick={() =>
-            setFontSize((prev) =>
-              Math.max(14, prev - 2)
-            )
-          }
+          onClick={() => setFontSize((prev) => Math.max(14, prev - 2))}
           className="w-12 h-12 rounded-xl bg-[#1B1B1B] hover:bg-[#239962] flex justify-center items-center"
         >
           <Minus />
         </button>
 
         <button
-          onClick={() =>
-            setHighlightMode(!highlightMode)
-          }
+          onClick={() => setHighlightMode(!highlightMode)}
           className={`w-12 h-12 rounded-xl flex justify-center items-center ${
-            highlightMode
-              ? "bg-yellow-500 text-black"
-              : "bg-[#1B1B1B] hover:bg-[#239962]"
+            highlightMode ? "bg-yellow-500 text-black" : "bg-[#1B1B1B] hover:bg-[#239962]"
           }`}
         >
           <Highlighter />
         </button>
-
       </div>
 
       {/* Page Container */}
-
       <div className="max-w-6xl mx-auto px-6 py-8">
-
         {/* Navigation */}
-
-        <div className="flex justify-between items-center mb-8">
-
-          <div className="flex gap-4">
-
+        <div className="flex justify-between items-center mb-8 flex-wrap gap-3">
+          <div className="flex gap-4 flex-wrap">
             <button
               onClick={() => navigate(-1)}
               className="flex items-center gap-2 bg-[#181818] hover:bg-[#239962] px-5 py-3 rounded-xl transition"
@@ -237,14 +193,23 @@ const Blog = () => {
               Back
             </button>
 
-           <button
-  onClick={() => navigate(`/comments/${blog._id}`)}
-  className="flex items-center gap-2 bg-[#181818] hover:bg-[#239962] px-5 py-3 rounded-xl transition"
->
-  <MessageSquare size={18} />
-  Comments
-</button>
+            <button
+              onClick={() => navigate(`/comments/${blog._id}`)}
+              className="flex items-center gap-2 bg-[#181818] hover:bg-[#239962] px-5 py-3 rounded-xl transition"
+            >
+              <MessageSquare size={18} />
+              Comments
+            </button>
 
+            {hasQuiz && (
+              <button
+                onClick={() => navigate(`/quiz/${blog._id}`)}
+                className="flex items-center gap-2 bg-[#239962] hover:bg-[#1d7c4d] px-5 py-3 rounded-xl transition font-semibold"
+              >
+                <HelpCircle size={18} />
+                Take Quiz
+              </button>
+            )}
           </div>
 
           <button
@@ -255,9 +220,7 @@ const Blog = () => {
                   url: window.location.href,
                 });
               } else {
-                navigator.clipboard.writeText(
-                  window.location.href
-                );
+                navigator.clipboard.writeText(window.location.href);
               }
             }}
             className="flex items-center gap-2 bg-[#181818] hover:bg-[#239962] px-5 py-3 rounded-xl transition"
@@ -265,11 +228,9 @@ const Blog = () => {
             <Share2 size={18} />
             Share
           </button>
-
         </div>
 
         {/* Hero */}
-
         {embedUrl ? (
           <iframe
             src={embedUrl}
@@ -286,11 +247,8 @@ const Blog = () => {
         )}
 
         {/* Article Header */}
-
-        <div className="mt-10 text-center">
-
+        <div className="mt-6 text-center">
           <div className="flex justify-center gap-3 flex-wrap">
-
             <span className="bg-[#239962] px-5 py-2 rounded-full flex items-center gap-2">
               <Folder size={15} />
               {blog.category}
@@ -300,70 +258,53 @@ const Blog = () => {
               <Calendar size={15} />
               {new Date(blog.createdAt).toLocaleDateString()}
             </span>
-
           </div>
 
-          <h1 className="text-5xl md:text-6xl font-black mt-8">
-            {blog.title}
-          </h1>
+          <h1 className="text-5xl md:text-6xl font-black mt-6">{blog.title}</h1>
 
           {blog.subtitle && (
-            <p className="text-2xl text-gray-400 mt-6 max-w-4xl mx-auto">
-              {blog.subtitle}
-            </p>
+            <p className="text-2xl text-gray-400 mt-4 max-w-4xl mx-auto">{blog.subtitle}</p>
           )}
-
         </div>
-        <div className="max-w-4xl mx-auto mt-16">
-  {renderContent()}
 
-  {/* Quiz Button */}
-  <div className="flex justify-center mt-14">
-    <button
-      onClick={() => navigate(`/quiz/${blog._id}`)}
-      className="bg-[#239962] hover:bg-[#1d7c4d] text-white px-10 py-4 rounded-full text-lg font-bold shadow-lg transition duration-300 flex items-center gap-3"
-    >
-      <MessageSquare size={22} />
-      Take Quiz
-    </button>
-  </div>
-</div>
-        {relatedBlogs.length > 0 && (
+        <div className="max-w-4xl mx-auto mt-8">{renderContent()}</div>
 
-          <div className="mt-24">
-
-            <div className="border-t border-gray-800 pt-16">
-
-              <h2 className="text-4xl font-black mb-10">
-
-                Related Articles
-
-              </h2>
-
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-
-                {relatedBlogs.map((item) => (
-
-                  <BlogCard
-                    key={item._id}
-                    blog={item}
-                  />
-
-                ))}
-
-              </div>
-
+        {/* Bottom Quiz CTA */}
+        {hasQuiz && (
+          <div className="max-w-4xl mx-auto mt-12 bg-[#111111] border border-gray-800 rounded-2xl p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <p className="text-xl font-black">Ready to test yourself?</p>
+              <p className="text-gray-400 mt-1">
+                {blog.quiz.length} question{blog.quiz.length > 1 ? "s" : ""} based on this lesson.
+              </p>
             </div>
 
+            <button
+              onClick={() => navigate(`/quiz/${blog._id}`)}
+              className="flex items-center gap-2 bg-[#239962] hover:bg-[#1d7c4d] px-6 py-3 rounded-xl font-semibold transition shrink-0"
+            >
+              <HelpCircle size={18} />
+              Take Quiz
+            </button>
           </div>
-
         )}
 
+        {relatedBlogs.length > 0 && (
+          <div className="mt-16">
+            <div className="border-t border-gray-800 pt-10">
+              <h2 className="text-4xl font-black mb-8">Related Articles</h2>
+
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {relatedBlogs.map((item) => (
+                  <BlogCard key={item._id} blog={item} />
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
-
       <div className="lg:hidden fixed bottom-6 right-6 flex flex-col gap-3 z-50">
-
         <button
           onClick={() => setFontSize((prev) => prev + 2)}
           className="w-12 h-12 rounded-full bg-[#239962] flex items-center justify-center shadow-xl"
@@ -372,35 +313,23 @@ const Blog = () => {
         </button>
 
         <button
-          onClick={() =>
-            setFontSize((prev) =>
-              Math.max(14, prev - 2)
-            )
-          }
+          onClick={() => setFontSize((prev) => Math.max(14, prev - 2))}
           className="w-12 h-12 rounded-full bg-[#239962] flex items-center justify-center shadow-xl"
         >
           <Minus />
         </button>
 
         <button
-          onClick={() =>
-            setHighlightMode(!highlightMode)
-          }
+          onClick={() => setHighlightMode(!highlightMode)}
           className={`w-12 h-12 rounded-full flex items-center justify-center shadow-xl ${
-            highlightMode
-              ? "bg-yellow-500 text-black"
-              : "bg-[#239962]"
+            highlightMode ? "bg-yellow-500 text-black" : "bg-[#239962]"
           }`}
         >
           <Highlighter />
         </button>
-
       </div>
-
     </div>
-
   );
-
 };
 
 export default Blog;
