@@ -18,7 +18,7 @@ const Header = () => {
   const { blogs } = useAppContext();
   const [search, setSearch] = useState("");
 
-  // Random Featured Video
+  // Most Recently Uploaded Video
   const featuredVideo = useMemo(() => {
     const videos = blogs
       .filter((blog) => blog.type === "Video" && blog.youtubeLink)
@@ -52,6 +52,10 @@ const Header = () => {
       navigate(`/blog/${filteredBlogs[0]._id}`);
       setSearch("");
     }
+  };
+
+  const goToVideo = () => {
+    if (featuredVideo) navigate(`/blog/${featuredVideo._id}`);
   };
 
   return (
@@ -127,7 +131,7 @@ const Header = () => {
         </div>
       </form>
 
-      {/* FEATURED VIDEO */}
+      {/* FEATURED VIDEO — most recently uploaded, plays on-site */}
       {featuredVideo && (
         <div className="grid md:grid-cols-2 gap-10 mt-12 items-center">
           {/* Thumbnail */}
@@ -139,7 +143,7 @@ const Header = () => {
             />
 
             <div
-              onClick={() => navigate(`/video/${featuredVideo._id}`)}
+              onClick={goToVideo}
               className="absolute inset-0 flex items-center justify-center cursor-pointer group"
             >
               <div className="bg-[#239962] p-6 rounded-full shadow-2xl group-hover:scale-110 transition duration-300">
@@ -167,7 +171,7 @@ const Header = () => {
             </p>
 
             <button
-              onClick={() => navigate(`/video/${featuredVideo._id}`)}
+              onClick={goToVideo}
               className="inline-flex items-center gap-3 mt-8 bg-[#239962] hover:bg-[#1d7c4d] text-white px-8 py-4 rounded-full font-semibold transition"
             >
               <FaPlay />
@@ -176,29 +180,6 @@ const Header = () => {
           </div>
         </div>
       )}
-
-      {/* WEEKLY CAUSE */}
-      <div className="mt-16 bg-gradient-to-r from-green-100 to-green-200 rounded-3xl p-8 flex flex-col lg:flex-row items-center justify-between gap-6">
-        <div>
-          <h2 className="text-xl font-bold text-[#1B4D3E]">
-            📚 This Week's Cause
-          </h2>
-
-          <p className="text-gray-700 mt-3 max-w-xl">
-            Help provide new books to St. Stephen Primary School. Together we
-            have raised
-            <span className="font-bold text-[#239962]"> KES 34,000</span>{" "}
-            towards our goal of <span className="font-bold">KES 50,000.</span>
-          </p>
-        </div>
-
-        <button
-          onClick={() => navigate("/contribute")}
-          className="border-2 border-red-500 text-red-600 px-8 py-4 rounded-full font-bold hover:bg-red-500 hover:text-white transition"
-        >
-          ❤️ Contribute
-        </button>
-      </div>
     </div>
   );
 };
