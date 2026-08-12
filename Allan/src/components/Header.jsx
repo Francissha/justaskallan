@@ -12,14 +12,11 @@ const getYoutubeThumbnail = (url) => {
 
   return match ? `https://img.youtube.com/vi/${match[1]}/hqdefault.jpg` : "";
 };
-
 const getYoutubeEmbedUrl = (url) => {
   if (!url) return "";
-
   const match = url.match(
     /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
   );
-
   return match ? `https://www.youtube.com/embed/${match[1]}?autoplay=1` : "";
 };
 
@@ -190,14 +187,13 @@ const Header = () => {
             </p>
 
             {!isPlaying && (
-  <button
-    onClick={() => setIsPlaying(true)}
-    className="inline-flex flex-row-reverse sm:flex-row items-center gap-1.5 sm:gap-3 mt-3 sm:mt-8 bg-[#239962] hover:bg-[#1d7c4d] text-white px-3.5 sm:px-8 py-1.5 sm:py-4 rounded-full font-semibold text-xs sm:text-base transition"
-  >
-    <FaPlay className="text-[10px] sm:text-base" />
-    Watch Video
-  </button>
-)}
+              <button
+                onClick={() => setIsPlaying(true)}
+                className="inline-flex flex-row-reverse sm:flex-row items-center gap-1.5 sm:gap-3 mt-3 sm:mt-8 bg-[#239962] hover:bg-[#1d7c4d] text-white px-3.5 sm:px-8 py-1.5 sm:py-4 rounded-full font-semibold text-xs sm:text-base transition"
+              >
+                <FaPlay className="text-[10px] sm:text-base" />
+                Watch Video
+              </button>
             )}
           </div>
         </div>
