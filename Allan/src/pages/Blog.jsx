@@ -188,7 +188,7 @@ const Blog = () => {
           >
             <PlayCircle size={15} className="sm:hidden" />
             <PlayCircle size={18} className="hidden sm:block" />
-            Quiz
+            Take Quiz
           </button>
         </div>
 
