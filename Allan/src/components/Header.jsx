@@ -169,7 +169,7 @@ const Header = () => {
                 </div>
 
                 <div className="absolute bottom-5 left-5 bg-white px-5 py-2 rounded-xl shadow-lg font-semibold">
-                  🎬 Featured Video
+                  🎬 Featured Vid
                 </div>
               </>
             )}
