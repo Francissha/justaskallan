@@ -10,6 +10,7 @@ import {
   Plus,
   Minus,
   Highlighter,
+  PlayCircle,
 } from "lucide-react";
 
 import BlogCard from "../components/BlogCard";
@@ -34,7 +35,6 @@ const Blog = () => {
   const [blog, setBlog] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Reader Controls
   const [fontSize, setFontSize] = useState(18);
   const [highlightMode, setHighlightMode] = useState(false);
   const [highlights, setHighlights] = useState({});
@@ -62,13 +62,18 @@ const Blog = () => {
     }
   }, [id]);
 
-  // Reading Progress
   useEffect(() => {
     const handleScroll = () => {
       const total =
-        document.documentElement.scrollHeight - document.documentElement.clientHeight;
+        document.documentElement.scrollHeight -
+        document.documentElement.clientHeight;
 
       const current = document.documentElement.scrollTop;
+
+      if (total <= 0) {
+        setProgress(0);
+        return;
+      }
 
       setProgress((current / total) * 100);
     };
@@ -78,25 +83,35 @@ const Blog = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  if (loading)
+  if (loading) {
     return (
-      <div className="min-h-screen bg-[#080808] text-white flex justify-center items-center text-2xl font-bold">
+      <div className="min-h-screen bg-[#080808] text-white flex items-center justify-center text-2xl font-bold">
         Loading...
       </div>
     );
+  }
 
-  if (!blog)
+  if (!blog) {
     return (
-      <div className="min-h-screen bg-[#080808] text-white flex justify-center items-center text-2xl font-bold">
+      <div className="min-h-screen bg-[#080808] text-white flex items-center justify-center text-2xl font-bold">
         Blog Not Found
       </div>
     );
+  }
 
-  const embedUrl = blog.type === "Video" ? getYoutubeEmbedUrl(blog.youtubeLink) : null;
+  const embedUrl =
+    blog.type === "Video"
+      ? getYoutubeEmbedUrl(blog.youtubeLink)
+      : null;
+
   const hasQuiz = Array.isArray(blog.quiz) && blog.quiz.length > 0;
 
   const relatedBlogs = blogs
-    .filter((item) => item._id !== blog._id && item.category === blog.category)
+    .filter(
+      (item) =>
+        item._id !== blog._id &&
+        item.category === blog.category
+    )
     .slice(0, 3);
 
   const toggleHighlight = (index) => {
@@ -108,16 +123,20 @@ const Blog = () => {
     }));
   };
 
-  // Automatic article renderer
   const renderContent = () => {
-    const lines = blog.description.split("\n").filter((line) => line.trim() !== "");
+    const lines = blog.description
+      .split("\n")
+      .filter((line) => line.trim() !== "");
 
     return lines.map((line, index) => {
       const text = line.trim();
 
       if (/^\d+\./.test(text)) {
         return (
-          <h2 key={index} className="text-3xl font-black text-[#239962] mt-8 mb-3">
+          <h2
+            key={index}
+            className="mt-8 mb-3 text-3xl font-black text-[#239962]"
+          >
             {text}
           </h2>
         );
@@ -130,9 +149,9 @@ const Blog = () => {
           style={{
             fontSize: `${fontSize}px`,
           }}
-          className={`leading-7 mb-3 rounded-xl px-3 py-1 transition duration-300 ${
+          className={`mb-3 rounded-xl px-3 py-1 leading-7 transition duration-300 ${
             highlights[index]
-              ? "bg-yellow-400/20 border-l-4 border-yellow-400"
+              ? "border-l-4 border-yellow-400 bg-yellow-400/20"
               : "hover:bg-white/5"
           }`}
         >
@@ -143,51 +162,52 @@ const Blog = () => {
   };
 
   return (
-    <div className="bg-[#080808] text-white min-h-screen">
-      {/* Reading Progress */}
-      <div className="fixed top-0 left-0 h-1 w-full bg-gray-800 z-50">
+    <div className="min-h-screen bg-[#080808] text-white">
+      <div className="fixed left-0 top-0 z-50 h-1 w-full bg-gray-800">
         <div
           className="h-full bg-[#239962] transition-all"
-          style={{
-            width: `${progress}%`,
-          }}
+          style={{ width: `${progress}%` }}
         />
       </div>
 
-      {/* Reader Controls */}
-      <div className="hidden lg:flex fixed left-8 top-1/2 -translate-y-1/2 flex-col gap-4 z-40">
+      <div className="fixed left-8 top-1/2 z-40 hidden -translate-y-1/2 flex-col gap-4 lg:flex">
         <button
           onClick={() => setFontSize((prev) => prev + 2)}
-          className="w-12 h-12 rounded-xl bg-[#1B1B1B] hover:bg-[#239962] flex justify-center items-center"
+          className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#1B1B1B] transition hover:bg-[#239962]"
+          aria-label="Increase font size"
         >
           <Plus />
         </button>
 
         <button
-          onClick={() => setFontSize((prev) => Math.max(14, prev - 2))}
-          className="w-12 h-12 rounded-xl bg-[#1B1B1B] hover:bg-[#239962] flex justify-center items-center"
+          onClick={() =>
+            setFontSize((prev) => Math.max(14, prev - 2))
+          }
+          className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#1B1B1B] transition hover:bg-[#239962]"
+          aria-label="Decrease font size"
         >
           <Minus />
         </button>
 
         <button
           onClick={() => setHighlightMode(!highlightMode)}
-          className={`w-12 h-12 rounded-xl flex justify-center items-center ${
-            highlightMode ? "bg-yellow-500 text-black" : "bg-[#1B1B1B] hover:bg-[#239962]"
+          className={`flex h-12 w-12 items-center justify-center rounded-xl transition ${
+            highlightMode
+              ? "bg-yellow-500 text-black"
+              : "bg-[#1B1B1B] hover:bg-[#239962]"
           }`}
+          aria-label="Highlight mode"
         >
           <Highlighter />
         </button>
       </div>
 
-      {/* Page Container */}
-      <div className="max-w-6xl mx-auto px-6 py-8">
-        {/* Navigation */}
-        <div className="flex justify-between items-center mb-8 flex-wrap gap-3">
-          <div className="flex gap-4 flex-wrap">
+      <div className="mx-auto max-w-6xl px-6 py-8">
+        <div className="mb-8 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap gap-3">
             <button
               onClick={() => navigate(-1)}
-              className="flex items-center gap-2 bg-[#181818] hover:bg-[#239962] px-5 py-3 rounded-xl transition"
+              className="flex items-center gap-2 rounded-xl bg-[#181818] px-5 py-3 transition hover:bg-[#239962]"
             >
               <ArrowLeft size={18} />
               Back
@@ -195,21 +215,11 @@ const Blog = () => {
 
             <button
               onClick={() => navigate(`/comments/${blog._id}`)}
-              className="flex items-center gap-2 bg-[#181818] hover:bg-[#239962] px-5 py-3 rounded-xl transition"
+              className="flex items-center gap-2 rounded-xl bg-[#181818] px-5 py-3 transition hover:bg-[#239962]"
             >
               <MessageSquare size={18} />
               Comments
             </button>
-
-            {hasQuiz && (
-              <button
-                onClick={() => navigate(`/quiz/${blog._id}`)}
-                className="flex items-center gap-2 bg-[#239962] hover:bg-[#1d7c4d] px-5 py-3 rounded-xl transition font-semibold"
-              >
-                <HelpCircle size={18} />
-                Take Quiz
-              </button>
-            )}
           </div>
 
           <button
@@ -223,78 +233,108 @@ const Blog = () => {
                 navigator.clipboard.writeText(window.location.href);
               }
             }}
-            className="flex items-center gap-2 bg-[#181818] hover:bg-[#239962] px-5 py-3 rounded-xl transition"
+            className="flex items-center gap-2 rounded-xl bg-[#181818] px-5 py-3 transition hover:bg-[#239962]"
           >
             <Share2 size={18} />
             Share
           </button>
         </div>
 
-        {/* Hero */}
         {embedUrl ? (
           <iframe
             src={embedUrl}
             title={blog.title}
             allowFullScreen
-            className="w-full h-[260px] md:h-[460px] rounded-3xl shadow-2xl"
+            className="h-[260px] w-full rounded-3xl shadow-2xl md:h-[460px]"
           />
         ) : (
           <img
             src={blog.image}
             alt={blog.title}
-            className="w-full h-[260px] md:h-[460px] object-cover rounded-3xl shadow-2xl"
+            className="h-[260px] w-full rounded-3xl object-cover shadow-2xl md:h-[460px]"
           />
         )}
 
-        {/* Article Header */}
-        <div className="mt-6 text-center">
-          <div className="flex justify-center gap-3 flex-wrap">
-            <span className="bg-[#239962] px-5 py-2 rounded-full flex items-center gap-2">
+        {hasQuiz && (
+          <div className="mx-auto mt-8 max-w-4xl">
+            <div className="relative overflow-hidden rounded-2xl border border-[#239962]/40 bg-gradient-to-r from-[#10251C] to-[#111111] p-5 shadow-xl md:p-6">
+              <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-[#239962]/10 blur-2xl" />
+
+              <div className="relative flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#239962]">
+                    <HelpCircle size={24} />
+                  </div>
+
+                  <div>
+                    <p className="text-lg font-bold">
+                      Test Your Knowledge
+                    </p>
+
+                    <p className="mt-1 text-sm text-gray-400">
+                      Take a quick quiz based on this lesson.
+                    </p>
+
+                    <p className="mt-2 text-xs font-semibold text-[#239962]">
+                      {blog.quiz.length}{" "}
+                      {blog.quiz.length === 1
+                        ? "Question"
+                        : "Questions"}
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => navigate(`/quiz/${blog._id}`)}
+                  className="group flex items-center justify-center gap-2 rounded-xl bg-[#239962] px-7 py-3.5 font-semibold text-white shadow-lg transition-all duration-300 hover:-translate-y-1 hover:bg-[#1d7c4d] hover:shadow-[#239962]/30"
+                >
+                  <PlayCircle
+                    size={20}
+                    className="transition-transform duration-300 group-hover:scale-110"
+                  />
+                  Take Quiz
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="mt-8 text-center">
+          <div className="flex flex-wrap justify-center gap-3">
+            <span className="flex items-center gap-2 rounded-full bg-[#239962] px-5 py-2">
               <Folder size={15} />
               {blog.category}
             </span>
 
-            <span className="bg-[#1B1B1B] px-5 py-2 rounded-full flex items-center gap-2">
+            <span className="flex items-center gap-2 rounded-full bg-[#1B1B1B] px-5 py-2">
               <Calendar size={15} />
               {new Date(blog.createdAt).toLocaleDateString()}
             </span>
           </div>
 
-          <h1 className="text-5xl md:text-6xl font-black mt-6">{blog.title}</h1>
+          <h1 className="mt-6 text-5xl font-black md:text-6xl">
+            {blog.title}
+          </h1>
 
           {blog.subtitle && (
-            <p className="text-2xl text-gray-400 mt-4 max-w-4xl mx-auto">{blog.subtitle}</p>
+            <p className="mx-auto mt-4 max-w-4xl text-2xl text-gray-400">
+              {blog.subtitle}
+            </p>
           )}
         </div>
 
-        <div className="max-w-4xl mx-auto mt-8">{renderContent()}</div>
-
-        {/* Bottom Quiz CTA */}
-        {hasQuiz && (
-          <div className="max-w-4xl mx-auto mt-12 bg-[#111111] border border-gray-800 rounded-2xl p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <p className="text-xl font-black">Ready to test yourself?</p>
-              <p className="text-gray-400 mt-1">
-                {blog.quiz.length} question{blog.quiz.length > 1 ? "s" : ""} based on this lesson.
-              </p>
-            </div>
-
-            <button
-              onClick={() => navigate(`/quiz/${blog._id}`)}
-              className="flex items-center gap-2 bg-[#239962] hover:bg-[#1d7c4d] px-6 py-3 rounded-xl font-semibold transition shrink-0"
-            >
-              <HelpCircle size={18} />
-              Take Quiz
-            </button>
-          </div>
-        )}
+        <div className="mx-auto mt-8 max-w-4xl">
+          {renderContent()}
+        </div>
 
         {relatedBlogs.length > 0 && (
           <div className="mt-16">
             <div className="border-t border-gray-800 pt-10">
-              <h2 className="text-4xl font-black mb-8">Related Articles</h2>
+              <h2 className="mb-8 text-4xl font-black">
+                Related Articles
+              </h2>
 
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
                 {relatedBlogs.map((item) => (
                   <BlogCard key={item._id} blog={item} />
                 ))}
@@ -304,25 +344,29 @@ const Blog = () => {
         )}
       </div>
 
-      <div className="lg:hidden fixed bottom-6 right-6 flex flex-col gap-3 z-50">
+      <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3 lg:hidden">
         <button
           onClick={() => setFontSize((prev) => prev + 2)}
-          className="w-12 h-12 rounded-full bg-[#239962] flex items-center justify-center shadow-xl"
+          className="flex h-12 w-12 items-center justify-center rounded-full bg-[#239962] shadow-xl"
         >
           <Plus />
         </button>
 
         <button
-          onClick={() => setFontSize((prev) => Math.max(14, prev - 2))}
-          className="w-12 h-12 rounded-full bg-[#239962] flex items-center justify-center shadow-xl"
+          onClick={() =>
+            setFontSize((prev) => Math.max(14, prev - 2))
+          }
+          className="flex h-12 w-12 items-center justify-center rounded-full bg-[#239962] shadow-xl"
         >
           <Minus />
         </button>
 
         <button
           onClick={() => setHighlightMode(!highlightMode)}
-          className={`w-12 h-12 rounded-full flex items-center justify-center shadow-xl ${
-            highlightMode ? "bg-yellow-500 text-black" : "bg-[#239962]"
+          className={`flex h-12 w-12 items-center justify-center rounded-full shadow-xl ${
+            highlightMode
+              ? "bg-yellow-500 text-black"
+              : "bg-[#239962]"
           }`}
         >
           <Highlighter />
