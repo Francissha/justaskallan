@@ -231,7 +231,6 @@ const Blog = () => {
               className="flex items-center gap-2 rounded-xl bg-[#181818] px-5 py-3 transition hover:bg-[#239962]"
             >
               <ArrowLeft size={18} />
-              Back
             </button>
 
             <button
@@ -247,24 +246,13 @@ const Blog = () => {
           </div>
 
           <button
-            onClick={() => {
-              if (navigator.share) {
-                navigator.share({
-                  title: blog.title,
-                  url: window.location.href,
-                });
-              } else {
-                navigator.clipboard.writeText(
-                  window.location.href
-                );
-              }
-            }}
-            className="flex items-center gap-2 rounded-xl bg-[#181818] px-5 py-3 transition hover:bg-[#239962]"
-          >
-            <Share2 size={18} />
-            Share
-          </button>
-
+  type="button"
+  onClick={() => navigate(`/quiz/${blog._id}`)}
+  className="flex items-center gap-2 rounded-xl bg-[#181818] px-5 py-3 transition hover:bg-[#239962]"
+>
+  <PlayCircle size={18} />
+  Quiz
+</button>
         </div>
 
         {/* Video / Image */}
