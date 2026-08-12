@@ -6,6 +6,7 @@ import {
   getBlogs,
   getBlog,
   updateBlog,
+  updateBlogQuiz,
   deleteBlog,
 } from "../controllers/blogController.js";
 
@@ -28,6 +29,12 @@ blogRouter.put(
   auth,
   upload.single("thumbnail"),
   updateBlog
+);
+
+blogRouter.put(
+  "/:id/quiz",
+  auth,
+  updateBlogQuiz
 );
 
 blogRouter.delete(
