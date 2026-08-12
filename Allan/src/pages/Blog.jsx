@@ -3,377 +3,287 @@ import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
   Share2,
-  Calendar,
-  Folder,
-  MessageSquare,
-  HelpCircle,
-  Plus,
-  Minus,
-  Highlighter,
+  MessageCircle,
   PlayCircle,
+  HelpCircle,
+  Calendar,
+  User,
 } from "lucide-react";
 
-import BlogCard from "../components/BlogCard";
-import { useAppContext } from "../context/AppContext";
-
-const getYoutubeEmbedUrl = (url) => {
-  if (!url) return null;
-
-  const match = url.match(
-    /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
-  );
-
-  return match ? `https://www.youtube.com/embed/${match[1]}` : null;
-};
-
-const Blog = () => {
+const BlogDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-
-  const { axios, backendUrl, blogs, fetchAllBlogs } = useAppContext();
 
   const [blog, setBlog] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const [fontSize, setFontSize] = useState(18);
-  const [highlightMode, setHighlightMode] = useState(false);
-  const [highlights, setHighlights] = useState({});
-  const [progress, setProgress] = useState(0);
+  useEffect(() => {
+    const fetchBlog = async () => {
+      try {
+        const response = await fetch(`/api/blogs/${id}`);
 
-  const fetchBlog = async () => {
-    try {
-      const { data } = await axios.get(`${backendUrl}/api/blog/${id}`);
+        if (!response.ok) {
+          throw new Error("Failed to fetch blog");
+        }
 
-      if (data.success) {
-        setBlog(data.blog);
+        const data = await response.json();
+        setBlog(data);
+      } catch (error) {
+        console.error("Error fetching blog:", error);
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      console.log(err);
-    } finally {
-      setLoading(false);
+    };
+
+    fetchBlog();
+  }, [id]);
+
+  const handleShare = async () => {
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: blog?.title,
+          text: blog?.description,
+          url: window.location.href,
+        });
+      } else {
+        await navigator.clipboard.writeText(window.location.href);
+        alert("Link copied!");
+      }
+    } catch (error) {
+      console.error("Share failed:", error);
     }
   };
 
-  useEffect(() => {
-    fetchBlog();
-
-    if (blogs.length === 0) {
-      fetchAllBlogs();
-    }
-  }, [id]);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const total =
-        document.documentElement.scrollHeight -
-        document.documentElement.clientHeight;
-
-      const current = document.documentElement.scrollTop;
-
-      if (total <= 0) {
-        setProgress(0);
-        return;
-      }
-
-      setProgress((current / total) * 100);
-    };
-
-    window.addEventListener("scroll", handleScroll);
-
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#080808] text-white flex items-center justify-center text-2xl font-bold">
-        Loading...
-      </div>
+      <main className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-primary font-semibold">
+          Loading...
+        </p>
+      </main>
     );
   }
 
   if (!blog) {
     return (
-      <div className="min-h-screen bg-[#080808] text-white flex items-center justify-center text-2xl font-bold">
-        Blog Not Found
-      </div>
+      <main className="min-h-screen bg-background flex flex-col items-center justify-center px-6">
+        <h1 className="text-3xl font-bold text-accent">
+          Blog Not Found
+        </h1>
+
+        <button
+          type="button"
+          onClick={() => navigate("/")}
+          className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 font-semibold text-background transition hover:opacity-90"
+        >
+          <ArrowLeft size={18} />
+          Back Home
+        </button>
+      </main>
     );
   }
 
-  const embedUrl =
-    blog.type === "Video"
-      ? getYoutubeEmbedUrl(blog.youtubeLink)
-      : null;
+  const hasQuiz =
+    Array.isArray(blog.quiz) && blog.quiz.length > 0;
 
-  const hasQuiz = Array.isArray(blog.quiz) && blog.quiz.length > 0;
-
-  const relatedBlogs = blogs
-    .filter(
-      (item) =>
-        item._id !== blog._id &&
-        item.category === blog.category
-    )
-    .slice(0, 3);
-
-  const toggleHighlight = (index) => {
-    if (!highlightMode) return;
-
-    setHighlights((prev) => ({
-      ...prev,
-      [index]: !prev[index],
-    }));
-  };
-
-  const renderContent = () => {
-    const lines = blog.description
-      .split("\n")
-      .filter((line) => line.trim() !== "");
-
-    return lines.map((line, index) => {
-      const text = line.trim();
-
-      if (/^\d+\./.test(text)) {
-        return (
-          <h2
-            key={index}
-            className="mt-8 mb-3 text-3xl font-black text-[#239962]"
-          >
-            {text}
-          </h2>
-        );
-      }
-
-      return (
-        <p
-          key={index}
-          onClick={() => toggleHighlight(index)}
-          style={{
-            fontSize: `${fontSize}px`,
-          }}
-          className={`mb-3 rounded-xl px-3 py-1 leading-7 transition duration-300 ${
-            highlights[index]
-              ? "border-l-4 border-yellow-400 bg-yellow-400/20"
-              : "hover:bg-white/5"
-          }`}
-        >
-          {text}
-        </p>
-      );
-    });
-  };
+  const embedUrl = blog.youtubeId
+    ? `https://www.youtube.com/embed/${blog.youtubeId}`
+    : blog.videoUrl || null;
 
   return (
-    <div className="min-h-screen bg-[#080808] text-white">
-      <div className="fixed left-0 top-0 z-50 h-1 w-full bg-gray-800">
-        <div
-          className="h-full bg-[#239962] transition-all"
-          style={{ width: `${progress}%` }}
-        />
-      </div>
+    <main className="min-h-screen bg-background">
+      <div className="mx-auto max-w-6xl px-6 py-10 md:py-14">
 
-      <div className="fixed left-8 top-1/2 z-40 hidden -translate-y-1/2 flex-col gap-4 lg:flex">
-        <button
-          onClick={() => setFontSize((prev) => prev + 2)}
-          className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#1B1B1B] transition hover:bg-[#239962]"
-          aria-label="Increase font size"
-        >
-          <Plus />
-        </button>
-
-        <button
-          onClick={() =>
-            setFontSize((prev) => Math.max(14, prev - 2))
-          }
-          className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#1B1B1B] transition hover:bg-[#239962]"
-          aria-label="Decrease font size"
-        >
-          <Minus />
-        </button>
-
-        <button
-          onClick={() => setHighlightMode(!highlightMode)}
-          className={`flex h-12 w-12 items-center justify-center rounded-xl transition ${
-            highlightMode
-              ? "bg-yellow-500 text-black"
-              : "bg-[#1B1B1B] hover:bg-[#239962]"
-          }`}
-          aria-label="Highlight mode"
-        >
-          <Highlighter />
-        </button>
-      </div>
-
-      <div className="mx-auto max-w-6xl px-6 py-8">
-        <div className="mb-8 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap gap-3">
-            <button
-              onClick={() => navigate(-1)}
-              className="flex items-center gap-2 rounded-xl bg-[#181818] px-5 py-3 transition hover:bg-[#239962]"
-            >
-              <ArrowLeft size={18} />
-              Back
-            </button>
-
-            <button
-              onClick={() => navigate(`/comments/${blog._id}`)}
-              className="flex items-center gap-2 rounded-xl bg-[#181818] px-5 py-3 transition hover:bg-[#239962]"
-            >
-              <MessageSquare size={18} />
-              Comments
-            </button>
-          </div>
+        {/* Navigation */}
+        <div className="mb-8 flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-5 py-2.5 text-sm font-semibold text-accent transition hover:border-primary hover:text-primary"
+          >
+            <ArrowLeft size={17} />
+            Back
+          </button>
 
           <button
-            onClick={() => {
-              if (navigator.share) {
-                navigator.share({
-                  title: blog.title,
-                  url: window.location.href,
-                });
-              } else {
-                navigator.clipboard.writeText(window.location.href);
-              }
-            }}
-            className="flex items-center gap-2 rounded-xl bg-[#181818] px-5 py-3 transition hover:bg-[#239962]"
+            type="button"
+            onClick={() =>
+              document
+                .getElementById("comments")
+                ?.scrollIntoView({
+                  behavior: "smooth",
+                })
+            }
+            className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-5 py-2.5 text-sm font-semibold text-accent transition hover:border-primary hover:text-primary"
           >
-            <Share2 size={18} />
+            <MessageCircle size={17} />
+            Comments
+          </button>
+
+          <button
+            type="button"
+            onClick={handleShare}
+            className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-5 py-2.5 text-sm font-semibold text-accent transition hover:border-primary hover:text-primary"
+          >
+            <Share2 size={17} />
             Share
           </button>
         </div>
 
-        {embedUrl ? (
-          <iframe
-            src={embedUrl}
-            title={blog.title}
-            allowFullScreen
-            className="h-[260px] w-full rounded-3xl shadow-2xl md:h-[460px]"
-          />
-        ) : (
-          <img
-            src={blog.image}
-            alt={blog.title}
-            className="h-[260px] w-full rounded-3xl object-cover shadow-2xl md:h-[460px]"
-          />
+        {/* Video / Image */}
+        <div className="overflow-hidden rounded-2xl bg-surface shadow-lg">
+          {embedUrl ? (
+            <div className="relative aspect-video w-full">
+              <iframe
+                src={embedUrl}
+                title={blog.title}
+                className="absolute inset-0 h-full w-full"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+              />
+            </div>
+          ) : blog.image ? (
+            <img
+              src={blog.image}
+              alt={blog.title}
+              className="h-auto max-h-[650px] w-full object-cover"
+            />
+          ) : (
+            <div className="flex aspect-video items-center justify-center bg-surface text-text-muted">
+              No media available
+            </div>
+          )}
+        </div>
+
+        {/* Meta */}
+        <div className="mt-7 flex flex-wrap items-center gap-5">
+          {blog.category && (
+            <span className="rounded-full bg-primary/10 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-primary">
+              {blog.category}
+            </span>
+          )}
+
+          {blog.createdAt && (
+            <div className="flex items-center gap-2 text-sm text-text-muted">
+              <Calendar size={16} />
+              {new Date(blog.createdAt).toLocaleDateString()}
+            </div>
+          )}
+
+          {blog.author && (
+            <div className="flex items-center gap-2 text-sm text-text-muted">
+              <User size={16} />
+              {blog.author}
+            </div>
+          )}
+        </div>
+
+        {/* Title */}
+        <div className="mt-6 max-w-4xl">
+          <h1 className="text-3xl font-bold leading-tight text-accent md:text-5xl">
+            {blog.title}
+          </h1>
+
+          {blog.description && (
+            <p className="mt-5 text-base leading-7 text-text-muted md:text-lg">
+              {blog.description}
+            </p>
+          )}
+        </div>
+
+        {/* Article Content */}
+        {blog.content && (
+          <article className="prose prose-lg mt-10 max-w-none text-text-muted">
+            {typeof blog.content === "string"
+              ? blog.content.split("\n").map((paragraph, index) =>
+                  paragraph.trim() ? (
+                    <p key={index}>{paragraph}</p>
+                  ) : null
+                )
+              : blog.content}
+          </article>
         )}
 
+        {/* Take Quiz */}
         {hasQuiz && (
-          <div className="mx-auto mt-8 max-w-4xl">
-            <div className="relative overflow-hidden rounded-2xl border border-[#239962]/40 bg-gradient-to-r from-[#10251C] to-[#111111] p-5 shadow-xl md:p-6">
-              <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-[#239962]/10 blur-2xl" />
+          <section className="mt-14">
+            <div className="relative overflow-hidden rounded-2xl border border-primary/30 bg-[#10251C] p-6 shadow-lg md:p-8">
 
-              <div className="relative flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#239962]">
-                    <HelpCircle size={24} />
+              <div className="absolute -right-20 -top-20 h-40 w-40 rounded-full bg-primary/10 blur-3xl" />
+
+              <div className="relative flex flex-col items-center justify-between gap-6 text-center sm:flex-row sm:text-left">
+
+                <div className="flex flex-col items-center gap-4 sm:flex-row">
+                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-primary">
+                    <HelpCircle
+                      size={26}
+                      className="text-background"
+                    />
                   </div>
 
                   <div>
-                    <p className="text-lg font-bold">
-                      Test Your Knowledge
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
+                      Quick Quiz
                     </p>
+
+                    <h2 className="mt-1 text-xl font-bold text-white md:text-2xl">
+                      Test Your Knowledge
+                    </h2>
 
                     <p className="mt-1 text-sm text-gray-400">
-                      Take a quick quiz based on this lesson.
-                    </p>
-
-                    <p className="mt-2 text-xs font-semibold text-[#239962]">
                       {blog.quiz.length}{" "}
                       {blog.quiz.length === 1
-                        ? "Question"
-                        : "Questions"}
+                        ? "question"
+                        : "questions"}{" "}
+                      based on this topic.
                     </p>
                   </div>
                 </div>
 
                 <button
-                  onClick={() => navigate(`/quiz/${blog._id}`)}
-                  className="group flex items-center justify-center gap-2 rounded-xl bg-[#239962] px-7 py-3.5 font-semibold text-white shadow-lg transition-all duration-300 hover:-translate-y-1 hover:bg-[#1d7c4d] hover:shadow-[#239962]/30"
+                  type="button"
+                  onClick={() =>
+                    navigate(`/quiz/${blog._id || blog.id}`)
+                  }
+                  className="group inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-8 py-3.5 font-bold text-background transition-all duration-300 hover:-translate-y-1 hover:opacity-90 hover:shadow-lg"
                 >
                   <PlayCircle
                     size={20}
                     className="transition-transform duration-300 group-hover:scale-110"
                   />
+
                   Take Quiz
                 </button>
               </div>
             </div>
-          </div>
+          </section>
         )}
 
-        <div className="mt-8 text-center">
-          <div className="flex flex-wrap justify-center gap-3">
-            <span className="flex items-center gap-2 rounded-full bg-[#239962] px-5 py-2">
-              <Folder size={15} />
-              {blog.category}
-            </span>
+        {/* Comments */}
+        <section
+          id="comments"
+          className="mt-14 border-t border-border pt-10"
+        >
+          <div className="flex items-center gap-3">
+            <MessageCircle
+              size={22}
+              className="text-primary"
+            />
 
-            <span className="flex items-center gap-2 rounded-full bg-[#1B1B1B] px-5 py-2">
-              <Calendar size={15} />
-              {new Date(blog.createdAt).toLocaleDateString()}
-            </span>
+            <h2 className="text-2xl font-bold text-accent">
+              Comments
+            </h2>
           </div>
 
-          <h1 className="mt-6 text-5xl font-black md:text-6xl">
-            {blog.title}
-          </h1>
+          <p className="mt-3 text-sm text-text-muted">
+            Share your thoughts about this topic.
+          </p>
+        </section>
 
-          {blog.subtitle && (
-            <p className="mx-auto mt-4 max-w-4xl text-2xl text-gray-400">
-              {blog.subtitle}
-            </p>
-          )}
-        </div>
-
-        <div className="mx-auto mt-8 max-w-4xl">
-          {renderContent()}
-        </div>
-
-        {relatedBlogs.length > 0 && (
-          <div className="mt-16">
-            <div className="border-t border-gray-800 pt-10">
-              <h2 className="mb-8 text-4xl font-black">
-                Related Articles
-              </h2>
-
-              <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-                {relatedBlogs.map((item) => (
-                  <BlogCard key={item._id} blog={item} />
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
       </div>
-
-      <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3 lg:hidden">
-        <button
-          onClick={() => setFontSize((prev) => prev + 2)}
-          className="flex h-12 w-12 items-center justify-center rounded-full bg-[#239962] shadow-xl"
-        >
-          <Plus />
-        </button>
-
-        <button
-          onClick={() =>
-            setFontSize((prev) => Math.max(14, prev - 2))
-          }
-          className="flex h-12 w-12 items-center justify-center rounded-full bg-[#239962] shadow-xl"
-        >
-          <Minus />
-        </button>
-
-        <button
-          onClick={() => setHighlightMode(!highlightMode)}
-          className={`flex h-12 w-12 items-center justify-center rounded-full shadow-xl ${
-            highlightMode
-              ? "bg-yellow-500 text-black"
-              : "bg-[#239962]"
-          }`}
-        >
-          <Highlighter />
-        </button>
-      </div>
-    </div>
+    </main>
   );
 };
 
-export default Blog;
+export default BlogDetails;
