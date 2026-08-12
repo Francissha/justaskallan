@@ -1,9 +1,7 @@
 import Blog from "../models/Blog.js";
 import imagekit from "../configs/imagekit.js";
 
-// =============================
 // Add Blog
-// =============================
 export const addBlog = async (req, res) => {
   try {
     const {
@@ -77,9 +75,7 @@ export const addBlog = async (req, res) => {
   }
 };
 
-// =============================
 // Get All Blogs
-// =============================
 export const getBlogs = async (req, res) => {
   try {
     const blogs = await Blog.find().sort({
@@ -100,9 +96,7 @@ export const getBlogs = async (req, res) => {
   }
 };
 
-// =============================
 // Get Single Blog
-// =============================
 export const getBlog = async (req, res) => {
   try {
     const blog = await Blog.findById(req.params.id);
@@ -128,9 +122,7 @@ export const getBlog = async (req, res) => {
   }
 };
 
-// =============================
 // Update Blog
-// =============================
 export const updateBlog = async (req, res) => {
   try {
     const {
@@ -205,9 +197,64 @@ export const updateBlog = async (req, res) => {
   }
 };
 
-// =============================
+// Update Blog Quiz
+export const updateBlogQuiz = async (req, res) => {
+  try {
+    const { quiz } = req.body;
+
+    if (!Array.isArray(quiz)) {
+      return res.status(400).json({
+        success: false,
+        message: "Quiz must be an array of questions.",
+      });
+    }
+
+    for (const q of quiz) {
+      if (
+        !q.question ||
+        !Array.isArray(q.options) ||
+        q.options.length < 2 ||
+        typeof q.correctAnswer !== "number" ||
+        q.correctAnswer < 0 ||
+        q.correctAnswer >= q.options.length
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Each question needs text, at least 2 options, and a valid correctAnswer index.",
+        });
+      }
+    }
+
+    const blog = await Blog.findById(req.params.id);
+
+    if (!blog) {
+      return res.status(404).json({
+        success: false,
+        message: "Blog not found.",
+      });
+    }
+
+    blog.quiz = quiz;
+    await blog.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Quiz updated successfully.",
+      blog,
+    });
+  } catch (error) {
+    console.error("UPDATE BLOG QUIZ ERROR");
+    console.error(error);
+
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 // Delete Blog
-// =============================
 export const deleteBlog = async (req, res) => {
   try {
     const blog = await Blog.findById(req.params.id);
