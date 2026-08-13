@@ -4,9 +4,7 @@ import LessonSuggestionCard from "../components/LessonSuggestionCard";
 import { lessonSuggestions } from "../data/lessonSuggestions";
 
 const LessonSuggestions = () => {
-  const [lessons, setLessons] = useState(
-    lessonSuggestions
-  );
+  const [lessons, setLessons] = useState(lessonSuggestions);
 
   const maxVotes = useMemo(() => {
     return Math.max(
@@ -35,19 +33,15 @@ const LessonSuggestions = () => {
   };
 
   const handleSuggestLesson = () => {
-    // Later we can open a modal here
     console.log("Open suggest lesson modal");
   };
 
   return (
-    <div className="min-h-screen bg-[#151a12] text-[#f3edda]">
-
-      {/* Main container */}
+    <section className="bg-[#151a12] text-[#f3edda]">
       <main className="mx-auto w-full max-w-4xl px-5 py-12 sm:px-8 sm:py-16">
 
         {/* Header */}
-        <section>
-
+        <div>
           <p className="text-sm font-bold tracking-[0.25em] text-[#e0ad31]">
             JUST ASK ALLAN
           </p>
@@ -64,29 +58,27 @@ const LessonSuggestions = () => {
 
           {/* Decorative divider */}
           <div className="mt-10 flex gap-5 overflow-hidden">
-            {Array.from({ length: 16 }).map(
-              (_, index) => (
-                <span
-                  key={index}
-                  className={`h-2 min-w-8 -skew-x-12 ${
-                    index % 2 === 0
-                      ? "bg-[#dcae32]"
-                      : "bg-[#71916b]"
-                  }`}
-                />
-              )
-            )}
+            {Array.from({ length: 16 }).map((_, index) => (
+              <span
+                key={index}
+                className={`h-2 min-w-8 -skew-x-12 ${
+                  index % 2 === 0
+                    ? "bg-[#dcae32]"
+                    : "bg-[#71916b]"
+                }`}
+              />
+            ))}
           </div>
-        </section>
+        </div>
 
-        {/* Up next header */}
+        {/* Up next */}
         <div className="mt-10 flex items-center justify-between gap-4">
-
           <h2 className="text-2xl font-bold sm:text-3xl">
             Up next
           </h2>
 
           <button
+            type="button"
             onClick={handleSuggestLesson}
             className="flex shrink-0 items-center gap-2 rounded-full border-2 border-[#dcae32] px-5 py-3 font-semibold text-[#dcae32] transition hover:bg-[#dcae32] hover:text-[#151a12] active:scale-95 sm:px-7"
           >
@@ -109,7 +101,7 @@ const LessonSuggestions = () => {
         </section>
 
       </main>
-    </div>
+    </section>
   );
 };
 
