@@ -16,6 +16,7 @@ import ListBlog from "./pages/admin/ListBlog";
 import AdminComments from "./pages/admin/Comments";
 import AdminQuizForm from "./pages/AdminQuizForm";
 import Comments from "./pages/Comments";
+import AddQuiz from "./pages/admin/AddQuiz";
 import Login from "./components/admin/Login";
 
 const App = () => {
@@ -38,6 +39,7 @@ const App = () => {
           <Route path="edit-blog/:id" element={<EditBlog />} />
           <Route path="list-blog" element={<ListBlog />} />
           <Route path="comments" element={<AdminComments />} />
+          <Route path="blog/:id/add-quiz" element={<AddQuiz />} />
           <Route path="blog/:id/quiz" element={<AdminQuizForm />} />
         </Route>
         <Route
