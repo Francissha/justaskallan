@@ -20,12 +20,27 @@ const AppProvider = ({ children }) => {
       const storedToken = localStorage.getItem("token");
 
       if (storedToken) {
+        config.headers = config.headers || {};
         config.headers.Authorization = `Bearer ${storedToken}`;
       }
 
       return config;
     },
     (error) => Promise.reject(error)
+  );
+
+  api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+      if (error.response?.status === 401) {
+        console.log("Unauthorized request:", error.response?.data);
+
+        localStorage.removeItem("token");
+        setToken("");
+      }
+
+      return Promise.reject(error);
+    }
   );
 
   const [blogs, setBlogs] = useState([]);
@@ -91,6 +106,13 @@ const AppProvider = ({ children }) => {
     }
   };
 
+  const saveToken = (newToken) => {
+    if (newToken) {
+      localStorage.setItem("token", newToken);
+      setToken(newToken);
+    }
+  };
+
   const logout = () => {
     localStorage.removeItem("token");
     setToken("");
@@ -99,17 +121,23 @@ const AppProvider = ({ children }) => {
   const value = {
     backendUrl,
     axios: api,
+
     token,
-    setToken,
+    setToken: saveToken,
     logout,
+
     blogs,
     setBlogs,
+
     blog,
     setBlog,
+
     comments,
     setComments,
+
     loading,
     setLoading,
+
     fetchAllBlogs,
     fetchBlog,
     fetchComments,
