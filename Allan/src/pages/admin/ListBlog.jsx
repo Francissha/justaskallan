@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, HelpCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { useAppContext } from "../../context/AppContext";
@@ -42,6 +42,10 @@ const ListBlog = () => {
 
   const handleEdit = (id) => {
     navigate(`/admin/edit-blog/${id}`);
+  };
+
+  const handleQuiz = (id) => {
+    navigate(`/admin/blog/${id}/quiz`);
   };
 
   if (loading) {
@@ -129,8 +133,17 @@ const ListBlog = () => {
                   <td className="px-6 py-4">
                     <div className="flex justify-center gap-3">
                       <button
+                        onClick={() => handleQuiz(blog._id)}
+                        className="text-[#1B4D3E] hover:text-[#16382e] transition"
+                        title="Manage Quiz"
+                      >
+                        <HelpCircle size={18} />
+                      </button>
+
+                      <button
                         onClick={() => handleEdit(blog._id)}
                         className="text-blue-600 hover:text-blue-800 transition"
+                        title="Edit Blog"
                       >
                         <Pencil size={18} />
                       </button>
@@ -138,6 +151,7 @@ const ListBlog = () => {
                       <button
                         onClick={() => handleDelete(blog._id)}
                         className="text-red-600 hover:text-red-800 transition"
+                        title="Delete Blog"
                       >
                         <Trash2 size={18} />
                       </button>
