@@ -5,7 +5,7 @@ import Categories from "../components/Categories";
 import Blogs from "../components/Blogs";
 import Footer from "../components/Footer";
 import { useAppContext } from "../context/AppContext";
-import LessonSuggestions from "../components/LessonSuggestions";
+import LessonSuggestions from "./LessonSuggestions";
 
 const Home = () => {
   const { fetchAllBlogs } = useAppContext();
