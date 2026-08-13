@@ -14,7 +14,7 @@ import AddBlog from "./pages/admin/AddBlog";
 import EditBlog from "./pages/admin/EditBlog";
 import ListBlog from "./pages/admin/ListBlog";
 import AdminComments from "./pages/admin/Comments";
-import AdminQuizForm from "./pages/admin/AdminQuizForm";
+import AdminQuizForm from "./pages/AdminQuizForm";
 import Comments from "./pages/Comments";
 import Login from "./components/admin/Login";
 
