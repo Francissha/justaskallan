@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Pencil, Trash2, HelpCircle } from "lucide-react";
+import { Pencil, Trash2, HelpCircle, ListChecks } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { useAppContext } from "../../context/AppContext";
@@ -44,8 +44,12 @@ const ListBlog = () => {
     navigate(`/admin/edit-blog/${id}`);
   };
 
-  const handleQuiz = (id) => {
+  const handleDynamicQuiz = (id) => {
     navigate(`/admin/blog/${id}/quiz`);
+  };
+
+  const handleFixedQuiz = (id) => {
+    navigate(`/admin/blog/${id}/add-quiz`);
   };
 
   if (loading) {
@@ -133,9 +137,17 @@ const ListBlog = () => {
                   <td className="px-6 py-4">
                     <div className="flex justify-center gap-3">
                       <button
-                        onClick={() => handleQuiz(blog._id)}
+                        onClick={() => handleFixedQuiz(blog._id)}
                         className="text-[#1B4D3E] hover:text-[#16382e] transition"
-                        title="Manage Quiz"
+                        title="Add Quiz (5 Questions)"
+                      >
+                        <ListChecks size={18} />
+                      </button>
+
+                      <button
+                        onClick={() => handleDynamicQuiz(blog._id)}
+                        className="text-purple-600 hover:text-purple-800 transition"
+                        title="Edit Quiz (Custom)"
                       >
                         <HelpCircle size={18} />
                       </button>
