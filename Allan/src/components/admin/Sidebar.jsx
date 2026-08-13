@@ -42,7 +42,7 @@ const Sidebar = () => {
           <span>List Blogs</span>
         </NavLink>
 
-        <NavLink to="/admin/list-blog" className={linkStyle}>
+        <NavLink to="/admin/quizzes" className={linkStyle}>
           <HelpCircle size={20} />
           <span>Quizzes</span>
         </NavLink>
