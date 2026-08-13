@@ -5,6 +5,7 @@ import {
   SquarePen,
   List,
   MessageSquare,
+  HelpCircle,
 } from "lucide-react";
 
 const Sidebar = () => {
@@ -17,7 +18,6 @@ const Sidebar = () => {
 
   return (
     <aside className="w-64 min-h-screen bg-white border-r border-gray-200">
-
       {/* Sidebar Title */}
       <div className="px-6 py-6 border-b">
         <h2 className="text-xl font-bold text-[#1B4D3E]">
@@ -27,7 +27,6 @@ const Sidebar = () => {
 
       {/* Navigation */}
       <div className="py-5 space-y-2">
-
         <NavLink to="/admin" end className={linkStyle}>
           <LayoutDashboard size={20} />
           <span>Dashboard</span>
@@ -43,11 +42,15 @@ const Sidebar = () => {
           <span>List Blogs</span>
         </NavLink>
 
+        <NavLink to="/admin/list-blog" className={linkStyle}>
+          <HelpCircle size={20} />
+          <span>Quizzes</span>
+        </NavLink>
+
         <NavLink to="/admin/comments" className={linkStyle}>
           <MessageSquare size={20} />
           <span>Comments</span>
         </NavLink>
-
       </div>
     </aside>
   );
