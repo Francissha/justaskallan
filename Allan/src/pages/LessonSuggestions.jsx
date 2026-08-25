@@ -5,6 +5,14 @@ import { lessonSuggestions } from "../data/lessonSuggestions";
 
 const LessonSuggestions = () => {
   const [lessons, setLessons] = useState(lessonSuggestions);
+  const [votedIds, setVotedIds] = useState(() => {
+    try {
+      const stored = localStorage.getItem("votedLessons");
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
 
   const maxVotes = useMemo(() => {
     return Math.max(...lessons.map((lesson) => lesson.votes), 1);
@@ -15,6 +23,12 @@ const LessonSuggestions = () => {
   }, [lessons]);
 
   const handleVote = (id) => {
+    if (votedIds.includes(id)) return; // already voted
+
+    const newVotedIds = [...votedIds, id];
+    setVotedIds(newVotedIds);
+    localStorage.setItem("votedLessons", JSON.stringify(newVotedIds));
+
     setLessons((prev) =>
       prev.map((lesson) =>
         lesson.id === id ? { ...lesson, votes: lesson.votes + 1 } : lesson
@@ -29,7 +43,6 @@ const LessonSuggestions = () => {
   return (
     <section className="bg-white text-gray-900">
       <div className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 sm:py-10">
-        {/* Header */}
         <div>
           <p className="text-xs font-bold tracking-widest text-[#e0ad31] uppercase">
             Just Ask Allan
@@ -40,7 +53,6 @@ const LessonSuggestions = () => {
           <p className="mt-2 max-w-2xl text-sm leading-6 text-gray-500 sm:text-base">
             Suggest a topic and vote up the ones you're most curious about — the top three move to the front of the line.
           </p>
-          {/* Decorative divider */}
           <div className="mt-5 flex gap-3 overflow-hidden">
             {Array.from({ length: 16 }).map((_, index) => (
               <span
@@ -53,7 +65,6 @@ const LessonSuggestions = () => {
           </div>
         </div>
 
-        {/* Up next row */}
         <div className="mt-6 flex items-center justify-between gap-4">
           <h3 className="text-lg font-bold text-gray-900 sm:text-xl">
             Up next
@@ -68,7 +79,6 @@ const LessonSuggestions = () => {
           </button>
         </div>
 
-        {/* Lesson list */}
         <div className="mt-4 space-y-3">
           {sortedLessons.map((lesson, index) => (
             <LessonSuggestionCard
@@ -77,6 +87,7 @@ const LessonSuggestions = () => {
               rank={index + 1}
               maxVotes={maxVotes}
               onVote={handleVote}
+              hasVoted={votedIds.includes(lesson.id)}
             />
           ))}
         </div>
