@@ -36,8 +36,7 @@ const LessonSuggestions = () => {
     console.log("Open suggest lesson modal");
   };
 
-  return (
-    <section className="bg-[#151a12] text-[#f3edda]">
+  return (<section className="bg-white text-gray-900">
       <main className="mx-auto w-full max-w-4xl px-5 py-12 sm:px-8 sm:py-16">
 
         {/* Header */}
